@@ -4,11 +4,14 @@ DPKG::Log - Parse the dpkg log
 
 =head1 SYNOPSIS
 
-.. TODO ..
+use DPKG::Log;
+
+my $dpkg_log = DPKG::Log->new('filename' => 'dpkg.log', 'parse' => 1);
 
 =head1 DESCRIPTION
 
-.. TODO ..
+This module is used to parse a logfile and store each line
+as a DPKG::Log::Entry object.
 
 =head1 METHODS
 
@@ -17,6 +20,7 @@ DPKG::Log - Parse the dpkg log
 =cut
 
 package DPKG::Log;
+our $VERSION = "0.01";
 
 use 5.010;
 use strict;
@@ -28,9 +32,6 @@ use DateTime::Format::Strptime;
 use DateTime::TimeZone;
 use Params::Validate qw(:all);
 use Data::Dumper;
-
-
-our $VERSION = "0.01";
 
 # 2011-02-03 07:54:46
 our $timestamp_re = '([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})';
@@ -44,12 +45,26 @@ our $status_line_re = "$timestamp_re status ([^ ]+) ([^ ]+) ([^ ]+)";
 # 2011-02-03 07:54:59 configure libproc-daemon-perl 0.06-1 0.06-1
 our $action_line_re = "$timestamp_re ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)";
 
+=item $dpkg_log = DPKG::Log->new()
+
+=item $dpkg_log = DPKG::Log->new('filename' => 'dpkg.log')
+
+=item $dpkg_log = DPKG::Log->new('filename' => 'dpkg.log', 'parse' => 1 )
+
+
+Returns a new DPKG::Log object. If parse is set to a true value the logfile
+specified by filename is parsed at the end of the object initialisation.
+Otherwise the parse routine has to be called.
+Filename parameter can be ommitted, it defaults to /var/log/dpkg.log.
+
+=cut
 sub new {
     my $package = shift;
 
     my %params = validate(@_,
         {
-            'filename' => { 'type' => SCALAR, 'default' => '/var/log/dpkg.log' }
+            'filename' => { 'type' => SCALAR, 'default' => '/var/log/dpkg.log' },
+            'parse' => 0
         }
     );
     my $self = {
@@ -61,14 +76,31 @@ sub new {
         $self->{'filename'} = $params{'filename'};
     }
     bless($self, $package);
+
+    if ($params{'parse'}) {
+        $self->parse;
+    }
+
     return $self;
 }
 
+=item $dpkg_log->filename
+
+=item $dpkg_log->filename('newfilename.log')
+
+Get or set the filename of the dpkg logfile.
+
+=cut
 sub filename {
     my $self = shift;
     @_ ? $self->{'filename'}=shift : $self->{filename};
 }
 
+=item $dpkg_log->parse
+
+Call the parser.
+
+=cut
 sub parse {
     my $self = shift;
     open(my $log_fh, "<", $self->{filename})
@@ -118,7 +150,7 @@ sub parse {
             $entry->package($3);
             $entry->installed_version($4);
             $entry->available_version($5);
-       } else {
+        } else {
             push(@{$self->{invalid_lines}}, $line);
             next;
         }
@@ -128,6 +160,22 @@ sub parse {
     return scalar(@{$self->{entries}});
 }
 
+=item @entries = $dpkg_log->entries;
+
+Return all entries.
+
+=cut
+sub entries {
+    my $self = shift;
+    return @{$self->{entries}};
+}
+
+=item $entry = $dpkg_log->next_entry;
+
+Return the next entry. Beware that this function shifts the next entry and therefore
+changes the object.
+
+=cut
 sub next_entry {
     my $self = shift;
     return shift(@{$self->{'entries'}});
