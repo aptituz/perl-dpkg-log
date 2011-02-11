@@ -176,12 +176,50 @@ sub parse {
 
 =item @entries = $dpkg_log->entries;
 
-Return all entries.
+=item @entries = $dpkg_log->entries('from' => '2010-01-01 00:00:00', to => '2010-01-02 24:00:00')
+
+Return all entries or all entries in a given timerange.
+
+B<from> and B<to> are optional arguments, specifying a date before (from) and after (to) which
+entries aren't returned.
+If only B<to> is specified all entries from the beginning of the log are read.
+If only B<from> is specified all entries till the end of the log are read.
 
 =cut
 sub entries {
     my $self = shift;
-    return @{$self->{entries}};
+    my %params = validate(@_, {  from => 0,
+                    to => 0
+                }
+    );
+    croak "Object does not store entries. Eventually parse were not run or log is empty. " if (not @{$self->{entries}});
+
+    return @{$self->{entries}} if (not ($params{'from'} or $params{'to'}));
+
+    my $ts_parser = DateTime::Format::Strptime->new( 
+                        pattern => '%F %T',
+                        time_zone => $self->{time_zone}
+                    );
+
+    my $from_dt;
+    my $to_dt;
+    if ($params{'from'}) {
+        $from_dt = $ts_parser->parse_datetime($params{'from'});
+    } else {
+        $from_dt = $self->{entries}->[0];
+    }
+
+    if ($params{'to'}) {
+        $to_dt = $ts_parser->parse_datetime($params{'to'});
+    } else {
+        $to_dt = $self->{entries}->[-1];
+    }
+
+    my @result;
+    foreach my $entry (@{$self->{entries}}) {
+        push(@result, $entry) if (($entry->timestamp >= $from_dt) and ($entry->timestamp <= $to_dt));
+    }
+
 }
 
 =item $entry = $dpkg_log->next_entry;
