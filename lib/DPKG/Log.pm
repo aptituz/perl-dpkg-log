@@ -69,7 +69,8 @@ sub new {
     );
     my $self = {
         entries => [],
-        invalid_lines => []
+        invalid_lines => [],
+        time_zone => undef,
     
     };
     if ($params{'filename'}) {
@@ -98,21 +99,34 @@ sub filename {
 
 =item $dpkg_log->parse
 
+=item $dpkg_log->parse('time_zone' => 'Europe/Berlin')
+
 Call the parser.
+
+The B<time_zone> parameter is optional and specifies in which time zone
+the dpkg log timestamps are.  If its ommitted it will use the default
+local time zone.
 
 =cut
 sub parse {
     my $self = shift;
     open(my $log_fh, "<", $self->{filename})
         or croak("unable to open logfile for reading: $!");
-   
+  
+    my %params = validate(@_, { 'time_zone' => 0 } );
 
     # Determine system timezone
-    my $tz = DateTime::TimeZone->new( 'name' => 'local' );
+    my $tz;
+    if ($params{'time_zone'}) {
+        $tz = DateTime::TimeZone->new( 'name' => $params{'time_zone'} );
+    } else {
+        $tz = DateTime::TimeZone->new( 'name' => 'local' );
+    }
     my $ts_parser = DateTime::Format::Strptime->new( 
                         pattern => '%F %T',
                         time_zone => $tz
                     );
+    $self->{time_zone} = $tz;
 
     my $lineno = 0;
     my $invalid_lines = 0;
