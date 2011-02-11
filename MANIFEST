@@ -1,0 +1,10 @@
+Changes
+Makefile.PL
+lib/DPKG/Log.pm
+lib/DPKG/Log/Entry.pm
+t/dpkg-log-entry.t
+t/dpkg-log.t
+test_data/dpkg.log
+test_data/install.log
+MANIFEST
+README
