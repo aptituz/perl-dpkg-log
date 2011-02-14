@@ -1,4 +1,4 @@
-use Test::More tests => 7;
+use Test::More tests => 10;
 use lib 'lib';
 use DPKG::Log;
 use Data::Dumper;
@@ -19,6 +19,15 @@ ok($dpkg_log = DPKG::Log->new('filename' => 'test_data/from_to.log',
         'from' => '2011-02-02 00:00:00',
         'to' => '2011-02-03 00:00:00'),
         'Initialize DPKG::Log object with limited time range');
+$dpkg_log->parse;
+ok(@entries = $dpkg_log->entries(), "entries returns array");
+is(scalar(@entries), 78, 'Number of entries is correct');
+
+ok($dpkg_log = DPKG::Log->new('filename' => 'test_data/from_to.log',
+        'from' => '2011-02-02',
+        'to' => '2011-02-02',
+        'timestamp_pattern' => '%F'),
+        'Initialize DPKG::Log object with limited time range and custom pattern');
 $dpkg_log->parse;
 ok(@entries = $dpkg_log->entries(), "entries returns array");
 is(scalar(@entries), 78, 'Number of entries is correct');
