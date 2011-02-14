@@ -1,0 +1,17 @@
+Source: libdpkg-log-perl
+Section: perl
+Priority: optional
+Build-Depends: debhelper (>= 7)
+Build-Depends-Indep: perl
+Maintainer: Patrick Schoenfeld <schoenfeld@debian.org>
+Standards-Version: 3.9.1
+Homepage: http://search.cpan.org/dist/DPKG-Log/
+
+Package: libdpkg-log-perl
+Architecture: all
+Depends: ${misc:Depends}, ${perl:Depends}
+Description: Parse the dpkg log
+ DPKG::Log is used to parse a logfile and store each line as a
+ DPKG::Log::Entry object.
+ .
+ This description was automagically extracted from the module by dh-make-perl.
