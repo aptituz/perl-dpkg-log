@@ -1,0 +1,5 @@
+libdpkg-log-perl (0.01-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Patrick Schoenfeld <schoenfeld@debian.org>  Mon, 14 Feb 2011 14:19:24 +0100
