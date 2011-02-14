@@ -172,13 +172,13 @@ sub parse {
             $entry->type('status');
             $entry->subject('package');
             $entry->status($2);
-            $entry->package($3);
+            $entry->associated_package($3);
             $entry->installed_version($4);
          } elsif ($line =~ /^$action_line_re/o) {
             $entry->subject('package');
             $entry->type('action');
             $entry->action($2);
-            $entry->package($3);
+            $entry->associated_package($3);
             $entry->installed_version($4);
             $entry->available_version($5);
         } else {

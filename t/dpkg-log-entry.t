@@ -43,7 +43,7 @@ isa_ok($entry->timestamp, "DateTime", "timestamp attribute");
 is($entry->action, "configure", "entry $entry_no has correct action");
 is($entry->type, "action", "entry $entry_no has correct type");
 is($entry->subject, "package", "entry $entry_no has correct subject");
-is($entry->package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
+is($entry->associated_package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
 is($entry->installed_version, "1.5000-1", "entry $entry_no has correct installed_version");
 is($entry->available_version, "1.5000-1", "entry $entry_no has correct available_version");
 
@@ -58,7 +58,7 @@ is($entry->status, "unpacked", "entry $entry_no has correct status");
 is($entry->action, "", "entry $entry_no has correct action");
 is($entry->type, "status", "entry $entry_no has correct type");
 is($entry->subject, "package", "entry $entry_no has correct subject");
-is($entry->package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
+is($entry->associated_package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
 is($entry->installed_version, "1.5000-1", "entry $entry_no has correct installed_version");
 
 $entry = $dpkg_log->next_entry;
@@ -72,7 +72,7 @@ is($entry->status, "half-configured", "entry $entry_no has correct status");
 is($entry->action, "", "entry $entry_no has correct action");
 is($entry->type, "status", "entry $entry_no has correct type");
 is($entry->subject, "package", "entry $entry_no has correct subject");
-is($entry->package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
+is($entry->associated_package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
 is($entry->installed_version, "1.5000-1", "entry $entry_no has correct installed_version");
 
 $entry = $dpkg_log->next_entry;
@@ -86,7 +86,7 @@ is($entry->status, "installed", "entry $entry_no has correct status");
 is($entry->action, "", "entry $entry_no has correct action");
 is($entry->type, "status", "entry $entry_no has correct type");
 is($entry->subject, "package", "entry $entry_no has correct subject");
-is($entry->package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
+is($entry->associated_package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
 is($entry->installed_version, "1.5000-1", "entry $entry_no has correct installed_version");
 
 #2011-02-11 12:29:47 configure libdatetime-format-strptime-perl 1.5000-1 1.5000-1

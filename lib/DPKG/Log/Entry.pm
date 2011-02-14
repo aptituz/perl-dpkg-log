@@ -10,7 +10,7 @@ $dpkg_log_entry = DPKG::Log::Entry->new( line => $line, $lineno => 1)
 
 $dpkg_log_entry->timestamp($dt);
 
-$dpkg_log_entry->package("foo");
+$dpkg_log_entry->associated_package("foo");
 
 
 =head1 DESCRIPTION
@@ -66,7 +66,7 @@ sub new {
                     'line' => { 'type' => SCALAR },
                     'lineno' => { 'type' => SCALAR },
                     'timestamp' => '',
-                    'package' => '',
+                    'associated_package' => '',
                     'action' => '',
                     'status' => '',
                     'subject' => '',
@@ -79,7 +79,7 @@ sub new {
         'line' => $params{line},
         'lineno' => $params{lineno},
         'timestamp' => $params{timestamp} || "",
-        'package' => $params{package} || "",
+        'associated_package' => $params{associated_package} || "",
         'action' => $params{action} || "",
         'status' => $params{status} || "",
         'type' => $params{type} || "",
@@ -121,8 +121,13 @@ Get or set the timestamp of this object. Should be a DateTime object.
 
 =cut
 sub timestamp {
-    my $self = shift;
-    @_ ? $self->{'timestamp'}=shift : $self->{timestamp};
+    my ($self, $timestamp) = @_;
+    if ($timestamp) {
+        $self->{timestamp} = $timestamp;
+    } else {
+        $timestamp = $self->{timestamp};
+    }
+    return $timestamp;
 }
 
 =item $dpkg_log_entry->type() / type
@@ -132,19 +137,31 @@ status or action line.
 
 =cut 
 sub type {
-    my $self = shift;
-    @_ ? $self->{'type'}=shift : $self->{type};
+    my ($self, $type) = @_;
+
+    if ($type) {
+        $self->{type} = $type;
+    } else {
+        $type = $self->{type}
+    }
+    return $type;
 }
 
-=item $dpkg_log_entry->package() / package
+=item $dpkg_log_entry->associated_package() / associated_package
 
-Get or set the package of this entry. This is for lines that are associated to a certain
+Get or set the associated_package of this entry. This is for lines that are associated to a certain
 package like in action or status lines. Its usually unset for startup and status lines.
 
 =cut 
-sub package {
-    my $self = shift;
-    @_ ? $self->{'package'}=shift : $self->{package};
+sub associated_package {
+    my ($self, $associated_package) = @_;
+
+    if ($associated_package) {
+        $self->{associated_package} = $associated_package;
+    } else {
+        $associated_package = $self->{associated_package};
+    }
+    return $associated_package;
 }
 
 =item $dpkg_log_entry->action() / action
@@ -155,8 +172,14 @@ It is usally unset for status lines.
 
 =cut 
 sub action {
-    my $self = shift;
-    @_ ? $self->{'action'}=shift : $self->{action};
+    my ($self, $action) = @_;
+
+    if ($action) {
+        $self->{action} = $action;
+    } else {
+        $action = $self->{action};
+    }
+    return $action;
 }
 
 =item $dpkg_log_entry->status() / status
@@ -165,8 +188,14 @@ Get or set the status of the package this entry refers to.
 
 =cut 
 sub status {
-    my $self = shift;
-    @_ ? $self->{'status'}=shift : $self->{status};
+    my ($self, $status) = @_;
+
+    if ($status) {
+        $self->{'status'} = $status;
+    } else {
+        $status = $self->{status}
+    }
+    return $status;
 }
 
 =item $dpkg_log_entry->subject() / subject
@@ -177,8 +206,14 @@ for all other lines its 'package'.
 =cut 
 
 sub subject {
-    my $self = shift;
-    @_ ? $self->{'subject'}=shift : $self->{subject};
+    my ($self, $subject) = @_;
+
+    if ($subject) {
+        $self->{subject} = $subject;
+    } else {
+        $subject = $self->{subject};
+    }
+    return $subject;
 }
 
 =item $dpkg_log_entry->installed_version() / installed_version
@@ -189,8 +224,14 @@ current status. Is "<none>" (or similar) if action is 'install', old version in
 case of an upgrade.
 =cut 
 sub installed_version {
-    my $self = shift;
-    @_ ? $self->{'installed_version'}=shift: $self->{installed_version};
+    my ($self, $installed_version) = @_;
+
+    if ($installed_version) {
+        $self->{'installed_version'} = $installed_version;
+    } else {
+        $installed_version = $self->{installed_version};
+    }
+    return $installed_version;
 }
 
 =item $dpkg_log_entry->available_version() / available_version
@@ -200,8 +241,12 @@ It refers to the currently available version of the package depending on the
 current status. Is different from installed_version if the action is install or upgrade.
 =cut 
 sub available_version {
-    my $self = shift;
-    @_ ? $self->{'available_version'}=shift: $self->{available_version};
+    my ($self, $available_version) = @_;
+    if ($available_version) {
+       $self->{'available_version'} = $available_version;
+    } else {
+        $available_version = $self->{available_version};
+    }
 }
 
 =back
