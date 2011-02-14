@@ -51,11 +51,23 @@ our $action_line_re = "$timestamp_re ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)";
 
 =item $dpkg_log = DPKG::Log->new('filename' => 'dpkg.log', 'parse' => 1 )
 
-
 Returns a new DPKG::Log object. If parse is set to a true value the logfile
 specified by filename is parsed at the end of the object initialisation.
 Otherwise the parse routine has to be called.
 Filename parameter can be ommitted, it defaults to /var/log/dpkg.log.
+
+Optionally its possible to specify B<from> or B<to> arguments as timestamps
+in the standard dpkg.log format.
+This will limit the entries which will be stored in the object to entries in the
+given timerange.
+Note that, if this is not what you want, you may ommit these attributes and
+can use B<filter_by_time()> instead.
+
+By default the module will assume that those timestamps are in the local timezone
+as determined by DateTime::TimeZone. This can be overriden by giving the
+argument B<time_zone> which takes a timezone string (e.g. 'Europe/Berlin').
+Additionally its possible to override the timestamp_pattern by specifying
+B<timestamp_format>. This has to be a valid pattern for DateTime::Format::Strptime.
 
 =cut
 sub new {
@@ -64,24 +76,27 @@ sub new {
     my %params = validate(@_,
         {
             'filename' => { 'type' => SCALAR, 'default' => '/var/log/dpkg.log' },
-            'parse' => 0
+            'parse' => 0,
+            'time_zone' => { 'type' => SCALAR, 'default' => 'local' },
+            'timestamp_pattern' => { 'type' => SCALAR, 'default' => '%F %T' },
+            'from' => 0,
+            'to' => 0
         }
     );
     my $self = {
         entries => [],
         invalid_lines => [],
         time_zone => undef,
+        from => undef,
+        to => undef
     
     };
-    if ($params{'filename'}) {
-        $self->{'filename'} = $params{'filename'};
+
+    while ( my ($key, $value) = each(%params) ) {
+        $self->{$key} = $value;
     }
+
     bless($self, $package);
-
-    if ($params{'parse'}) {
-        $self->parse;
-    }
-
     return $self;
 }
 
@@ -113,23 +128,19 @@ sub parse {
     open(my $log_fh, "<", $self->{filename})
         or croak("unable to open logfile for reading: $!");
   
-    my %params = validate(@_, { 'time_zone' => 0 } );
+    my %params = validate(@_, { 
+            'time_zone' => {  default => $self->{time_zone} },
+            'timestamp_pattern' => { default => $self->{timestamp_pattern} },
+        } );
 
     # Determine system timezone
-    my $tz;
-    if ($params{'time_zone'}) {
-        $tz = DateTime::TimeZone->new( 'name' => $params{'time_zone'} );
-    } else {
-        $tz = DateTime::TimeZone->new( 'name' => 'local' );
-    }
+    my $tz =  DateTime::TimeZone->new( 'name' => $params{'time_zone'} );
     my $ts_parser = DateTime::Format::Strptime->new( 
-                        pattern => '%F %T',
-                        time_zone => $tz
+                        pattern => $params{'timestamp_pattern'},
+                        time_zone => $params{'time_zone'}
                     );
-    $self->{time_zone} = $tz;
 
     my $lineno = 0;
-    my $invalid_lines = 0;
     while  (my $line = <$log_fh>) {
         $lineno++;
     
@@ -171,6 +182,14 @@ sub parse {
 
         push(@{$self->{entries}}, $entry);
     }
+
+    if ($self->{'from'} or $self->{'to'}) {
+        @{$self->{entries}} = ($self->filter_by_time(
+             from => $self->{'from'},
+             to => $self->{'to'},
+             entry_ref => $self->{entries}));
+    }
+
     return scalar(@{$self->{entries}});
 }
 
@@ -188,38 +207,22 @@ If only B<from> is specified all entries till the end of the log are read.
 =cut
 sub entries {
     my $self = shift;
-    my %params = validate(@_, {  from => 0,
-                    to => 0
+    my %params = validate(@_, 
+                {  
+                    from => 0,
+                    to => 0,
+                    time_zone => { 'type' => SCALAR, 'default' => $self->{'time_zone'} }
                 }
     );
-    croak "Object does not store entries. Eventually parse were not run or log is empty. " if (not @{$self->{entries}});
+    croak "Object does not store entries. Eventually parse function were not run or log is empty. " if (not @{$self->{entries}});
 
-    return @{$self->{entries}} if (not ($params{'from'} or $params{'to'}));
-
-    my $ts_parser = DateTime::Format::Strptime->new( 
-                        pattern => '%F %T',
-                        time_zone => $self->{time_zone}
-                    );
-
-    my $from_dt;
-    my $to_dt;
-    if ($params{'from'}) {
-        $from_dt = $ts_parser->parse_datetime($params{'from'});
+    if (not ($params{'from'} or $params{'to'})) {
+        return @{$self->{entries}};
     } else {
-        $from_dt = $self->{entries}->[0];
+        return $self->filter_by_time(from => $params{'from'},
+            to => $params{'to'},
+            time_zone => $params{'time_zone'});
     }
-
-    if ($params{'to'}) {
-        $to_dt = $ts_parser->parse_datetime($params{'to'});
-    } else {
-        $to_dt = $self->{entries}->[-1];
-    }
-
-    my @result;
-    foreach my $entry (@{$self->{entries}}) {
-        push(@result, $entry) if (($entry->timestamp >= $from_dt) and ($entry->timestamp <= $to_dt));
-    }
-
 }
 
 =item $entry = $dpkg_log->next_entry;
@@ -231,6 +234,60 @@ changes the object.
 sub next_entry {
     my $self = shift;
     return shift(@{$self->{'entries'}});
+}
+
+=item @entries = $dpkg_log->filter_by_time(from => ts, to => ts)
+
+=item @entries = $dpkg_log->filter_by_time(from => ts)
+
+=item @entries = $dpkg_log->filter_by_time(to => ts)
+
+=item @entries = $dpkg_log->filter_by_time(from => ts, to => ts, entry_ref => $entry_ref)
+
+Filter entries by given B<from> - B<to> range. See the explanations for
+the new sub for the arguments.
+
+If entry_ref is given and an array reference its used instead of $self->{entries}
+as input source for the entries which are to be filtered.
+=cut
+sub filter_by_time {
+    my $self = shift;
+    my %params = validate( @_,
+        {
+            from => 0,
+            to => 0,
+            time_zone => { default => $self->{'time_zone'} },
+            timestamp_pattern => { default => "%F %T" },
+            entry_ref => { default => $self->{entries} },
+        }
+    );
+    
+    my @entries = @{$params{'entry_ref'}};
+    if (not @entries) {
+        croak "Object does not store entries. Eventually parse function were not run or log is empty.";
+    }
+
+    # Initialize timestamp parser
+    my $ts_parser = DateTime::Format::Strptime->new( 
+                        pattern => $params{'timestamp_pattern'},
+                        time_zone => $params{'time_zone'}
+                    );
+
+    my $from_dt;
+    my $to_dt;
+    if ($params{'from'}) {
+        $from_dt = $ts_parser->parse_datetime($params{'from'});
+    } else {
+        $from_dt = $entries[0]->timestamp;
+    }
+    if ($params{'to'}) {
+        $to_dt = $ts_parser->parse_datetime($params{'to'});
+    } else {
+        $to_dt = $entries[-1]->timestamp;
+    }
+
+    @entries = grep { ($_->timestamp >= $from_dt) and ($_->timestamp <= $to_dt) } @entries;
+    return @entries;
 }
 
 =back
