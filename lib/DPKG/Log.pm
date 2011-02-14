@@ -264,7 +264,7 @@ sub filter_by_time {
             from => 0,
             to => 0,
             time_zone => { default => $self->{'time_zone'} },
-            timestamp_pattern => { default => "%F %T" },
+            timestamp_pattern => { default => $self->{'timestamp_pattern'} },
             entry_ref => { default => $self->{entries} },
         }
     );
