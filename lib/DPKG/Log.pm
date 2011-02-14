@@ -20,11 +20,12 @@ as a DPKG::Log::Entry object.
 =cut
 
 package DPKG::Log;
-our $VERSION = "0.01";
 
-use 5.010;
 use strict;
 use warnings;
+use 5.010;
+
+our $VERSION = "0.01";
 
 use Carp;
 use DPKG::Log::Entry;
@@ -108,8 +109,13 @@ Get or set the filename of the dpkg logfile.
 
 =cut
 sub filename {
-    my $self = shift;
-    @_ ? $self->{'filename'}=shift : $self->{filename};
+    my ($self, $filename) = @_;
+    if ($filename) {
+        $self->{filename} = $filename;
+    } else {
+        $filename = $self->{filename};
+    }
+    return $filename;
 }
 
 =item $dpkg_log->parse
@@ -182,6 +188,7 @@ sub parse {
 
         push(@{$self->{entries}}, $entry);
     }
+    close($log_fh);
 
     if ($self->{'from'} or $self->{'to'}) {
         @{$self->{entries}} = ($self->filter_by_time(
