@@ -66,6 +66,11 @@ sub new {
     return $self;
 }
 
+=item $analyser->analyse;
+
+Analyse the debian package log.
+
+=cut
 sub analyse {
     my $self = shift;
     my $dpkg_log = $self->{dpkg_log};
@@ -97,6 +102,85 @@ sub analyse {
     }
 }
 
+=item $analyser->newly_installed_packages
+
+Return all packages which were newly installed in the dpkg.log.
+
+=cut
+sub newly_installed_packages {
+    my $self = shift;
+    return keys %{$self->{newly_installed_packages}};
+}
+
+=item $analyser->upgraded_packages
+
+
+Return all packages which were upgraded in the dpkg.log.
+
+=cut
+sub upgraded_packages {
+    my $self = shift;
+    return keys %{$self->{upgraded_packages}};
+}
+
+=item $analyser->removed_packages
+
+
+Return all packages which were removed in the dpkg.log.
+
+=cut
+sub removed_packages {
+    my $self = shift;
+    return keys %{$self->{removed_packages}};
+}
+
+=item $analyser->unpacked_packages
+
+
+Return all packages which are left in state 'unpacked'.
+
+=cut
+sub unpacked_packages {
+    my $self = shift;
+    my @result;
+    foreach my $package (keys %{$self->{packages}}) {
+        if ($self->{packages}->{$package}->{status} = "unpacked") {
+            push(@result, $package);
+        }
+    }
+}
+
+=item $analyser->halfinstalled_packages
+
+
+Return all packages which are left in state 'half-installed'.
+
+=cut
+sub halfinstalled_packages {
+    my $self = shift;
+    my @result;
+    foreach my $package (keys %{$self->{packages}}) {
+        if ($self->{packages}->{$package}->{status} = "half-installed") {
+            push(@result, $package);
+        }
+    }
+}
+
+=item $analyser->halfconfigured_packages
+
+
+Return all packages which are left in state 'half-configured'.
+
+=cut
+sub halfconfigured_packages {
+    my $self = shift;
+    my @result;
+    foreach my $package (keys %{$self->{packages}}) {
+        if ($self->{packages}->{$package}->{status} = "half-configured") {
+            push(@result, $package);
+        }
+    }
+}
 =back
 
 =head1 AUTHOR
