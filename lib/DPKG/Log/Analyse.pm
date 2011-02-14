@@ -71,10 +71,10 @@ sub analyse {
     my $dpkg_log = $self->{dpkg_log};
 
     foreach my $entry ($dpkg_log->entries) {
-        next if not $entry->package;
+        next if not $entry->associated_package;
         
         # Initialize data structure if this is a package
-        my $package = $entry->package;
+        my $package = $entry->associated_package;
         if (not defined $self->{packages}->{$package}) {
             $self->{packages}->{$package} = {};
         }
@@ -95,16 +95,6 @@ sub analyse {
             $self->{packages}->{$package}->{status} = $entry->status;
         }
     }
-
-    use Data::Dumper;
-    print "All packages:\n";
-    print Dumper($self->{packages});
-    print "Newly installed:\n";
-    print Dumper($self->{newly_installed_packages});
-    print "Removed:\n";
-    print Dumper($self->{removed_packages});
-    print "Upgraded:\n";
-    print Dumper($self->{upgraded_packages});
 }
 
 =back
