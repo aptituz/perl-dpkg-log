@@ -1,4 +1,4 @@
-=head1 NMAE
+=head1 NAME
 
 DPKG::Log - Parse the dpkg log
 
@@ -58,7 +58,7 @@ Otherwise the parse routine has to be called.
 Filename parameter can be ommitted, it defaults to /var/log/dpkg.log.
 
 Optionally its possible to specify B<from> or B<to> arguments as timestamps
-in the standard dpkg.log format.
+in the standard dpkg.log format or as DateTime objects.
 This will limit the entries which will be stored in the object to entries in the
 given timerange.
 Note that, if this is not what you want, you may ommit these attributes and
@@ -131,7 +131,9 @@ sub parse {
     open(my $log_fh, "<", $self->{filename})
         or croak("unable to open logfile for reading: $!");
  
-    my %params = validate(@_, { 
+    my %params = validate(@_, {
+            'from' => { default => $self->{from} },
+            'to' => { default => $self->{to} }, 
             'time_zone' => {  default => $self->{time_zone} },
             'timestamp_pattern' => { default => $self->{timestamp_pattern} },
         } );
@@ -188,10 +190,7 @@ sub parse {
     close($log_fh);
 
     if ($self->{from} or $self->{to}) {
-        @{$self->{entries}} = ($self->filter_by_time(
-             from => $self->{from},
-             to => $self->{to},
-             entry_ref => $self->{entries}));
+        @{$self->{entries}} = $self->filter_by_time( entry_ref => $self->{entries}, %params);
     }
 
     return scalar(@{$self->{entries}});
@@ -211,6 +210,7 @@ If only B<from> is specified all entries till the end of the log are read.
 =cut
 sub entries {
     my $self = shift;
+
     my %params = validate(@_, 
                 {  
                     from => 0,
@@ -223,9 +223,7 @@ sub entries {
     if (not ($params{from} or $params{to})) {
         return @{$self->{entries}};
     } else {
-        return $self->filter_by_time(from => $params{from},
-            to => $params{to},
-            time_zone => $params{time_zone});
+        return $self->filter_by_time(%params);
     }
 }
 
@@ -271,26 +269,9 @@ sub filter_by_time {
         croak "Object does not store entries. Eventually parse function were not run or log is empty.";
     }
 
-    # Initialize timestamp parser
-    my $ts_parser = DateTime::Format::Strptime->new( 
-                        pattern => $params{timestamp_pattern},
-                        time_zone => $params{time_zone}
-                    );
+    $self->__eval_datetime_info(%params);
 
-    my $from_dt;
-    my $to_dt;
-    if ($params{from}) {
-        $from_dt = $ts_parser->parse_datetime($params{from});
-    } else {
-        $from_dt = $entries[0]->timestamp;
-    }
-    if ($params{to}) {
-        $to_dt = $ts_parser->parse_datetime($params{to});
-    } else {
-        $to_dt = $entries[-1]->timestamp;
-    }
-
-    @entries = grep { ($_->timestamp >= $from_dt) and ($_->timestamp <= $to_dt) } @entries;
+    @entries = grep { ($_->timestamp >= $self->{from}) and ($_->timestamp <= $self->{to}) } @entries;
     return @entries;
 }
 
@@ -318,6 +299,46 @@ sub get_datetime_info() {
     }
     return ($from, $to);
 }
+
+## Internal methods
+sub __eval_datetime_info {
+    my $self = shift;
+    
+    my %params = validate(@_,
+        {
+            from => { default => $self->{from} },
+            to => { default => $self->{to} },
+            time_zone => { default => $self->{time_zone} },
+            timestamp_pattern => { default => $self->{timestamp_pattern} },
+            entry_ref => { default => $self->{entries} },
+        });
+
+    my $entry_ref = $params{entry_ref};
+    my $from = $params{from};
+    my $to = $params{to};
+
+    my $ts_parser = DateTime::Format::Strptime->new(
+        pattern => $params{timestamp_pattern},
+        time_zone => $params{time_zone}
+    );
+
+    if (not $from) {
+        $from = $entry_ref->[0]->timestamp;
+    }
+    if (not $to) {
+        $to = $entry_ref->[-1]->timestamp;
+    }
+    if (ref($from) ne "DateTime") {
+        $from = $ts_parser->parse_datetime($from);
+    }
+    if (ref($to) ne "DateTime") {
+        $to = $ts_parser->parse_datetime($to);
+    }
+
+    $self->{from} = $from;
+    $self->{to} = $to;
+}
+
 
 =back
 
