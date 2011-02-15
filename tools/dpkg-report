@@ -19,16 +19,17 @@ sub generate_report {
     my @newly_installed_packages = $analyser->newly_installed_packages;
     my @upgraded_packages = $analyser->upgraded_packages;
     my @removed_packages = $analyser->removed_packages;
-    my @halfinstalled_packages = $analyser->halfinstalled_packages;
-    my @halfconfigured_packages = $analyser->halfconfigured_packages;
+    my @halfinstalled_packages = $analyser->halfinstalled_packages || ();
+    my @halfconfigured_packages = $analyser->halfconfigured_packages || ();
 
 
+    print "Hostname: $hostname\n";
     my $data = {
         newly_installed_packages => \@newly_installed_packages,
         upgraded_packages => \@upgraded_packages,
         removed_packages => \@removed_packages,
         halfinstalled_packages => \@halfinstalled_packages,
-        halfconfigured_packages => @halfconfigured_packages,
+#        halfconfigured_packages => @halfconfigured_packages or [],
         hostname => $hostname
     };
     my $template = Template->new(

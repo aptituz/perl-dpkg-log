@@ -51,7 +51,10 @@ sub new {
         packages => {},
         newly_installed_packages => {},
         removed_packages => {},
-        upgraded_packages => {}
+        upgraded_packages => {},
+        halfinstalled_packages => [],
+        halfconfigured_packages => [],
+
     };
 
     if ($params{'filename'}) {
@@ -101,6 +104,17 @@ sub analyse {
             }
         } elsif ($entry->type eq 'status') {
             $self->{packages}->{$package}->{status} = $entry->status;
+        }
+    }
+
+    foreach my $package (keys %{$self->{packages}}) {
+        if ($self->{packages}->{$package}->{status} eq "half-installed") {
+            push(@{$self->{halfinstalled_packages}}, $package);
+            print "Package is $package is half-installed\n";
+        }
+        if ($self->{packages}->{$package}->{status} eq "half-configured") {
+            push(@{$self->{halfconfigured_packages}}, $package);
+            print "Package is $package is half-configured\n";
         }
     }
 }
@@ -161,12 +175,7 @@ Return all packages which are left in state 'half-installed'.
 =cut
 sub halfinstalled_packages {
     my $self = shift;
-    my @result;
-    foreach my $package (keys %{$self->{packages}}) {
-        if ($self->{packages}->{$package}->{status} eq "half-installed") {
-            push(@result, $package);
-        }
-    }
+    return @{$self->{halfinstalled_packages}};
 }
 
 =item $analyser->halfconfigured_packages
@@ -177,12 +186,7 @@ Return all packages which are left in state 'half-configured'.
 =cut
 sub halfconfigured_packages {
     my $self = shift;
-    my @result;
-    foreach my $package (keys %{$self->{packages}}) {
-        if ($self->{packages}->{$package}->{status} eq "half-configured") {
-            push(@result, $package);
-        }
-    }
+    return @{$self->{halfconfigured_packages}};
 }
 =back
 
