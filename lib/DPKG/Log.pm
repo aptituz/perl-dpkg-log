@@ -89,13 +89,10 @@ sub new {
         invalid_lines => [],
         time_zone => undef,
         from => undef,
-        to => undef
+        to => undef,
+        %params
     
     };
-
-    while ( my ($key, $value) = each(%params) ) {
-        $self->{$key} = $value;
-    }
 
     bless($self, $package);
     return $self;
@@ -140,10 +137,10 @@ sub parse {
         } );
 
     # Determine system timezone
-    my $tz =  DateTime::TimeZone->new( 'name' => $params{'time_zone'} );
+    my $tz =  DateTime::TimeZone->new( 'name' => $params{time_zone} );
     my $ts_parser = DateTime::Format::Strptime->new( 
-                        pattern => $params{'timestamp_pattern'},
-                        time_zone => $params{'time_zone'}
+                        pattern => $params{timestamp_pattern},
+                        time_zone => $params{time_zone}
                     );
 
     my $lineno = 0;
@@ -190,10 +187,10 @@ sub parse {
     }
     close($log_fh);
 
-    if ($self->{'from'} or $self->{'to'}) {
+    if ($self->{from} or $self->{to}) {
         @{$self->{entries}} = ($self->filter_by_time(
-             from => $self->{'from'},
-             to => $self->{'to'},
+             from => $self->{from},
+             to => $self->{to},
              entry_ref => $self->{entries}));
     }
 
@@ -218,17 +215,17 @@ sub entries {
                 {  
                     from => 0,
                     to => 0,
-                    time_zone => { 'type' => SCALAR, 'default' => $self->{'time_zone'} }
+                    time_zone => { type => SCALAR, default => $self->{time_zone} }
                 }
     );
     croak "Object does not store entries. Eventually parse function were not run or log is empty. " if (not @{$self->{entries}});
 
-    if (not ($params{'from'} or $params{'to'})) {
+    if (not ($params{from} or $params{to})) {
         return @{$self->{entries}};
     } else {
-        return $self->filter_by_time(from => $params{'from'},
-            to => $params{'to'},
-            time_zone => $params{'time_zone'});
+        return $self->filter_by_time(from => $params{from},
+            to => $params{to},
+            time_zone => $params{time_zone});
     }
 }
 
@@ -240,7 +237,7 @@ changes the object.
 =cut
 sub next_entry {
     my $self = shift;
-    return shift(@{$self->{'entries'}});
+    return shift(@{$self->{entries}});
 }
 
 =item @entries = $dpkg_log->filter_by_time(from => ts, to => ts)
@@ -263,32 +260,32 @@ sub filter_by_time {
         {
             from => 0,
             to => 0,
-            time_zone => { default => $self->{'time_zone'} },
-            timestamp_pattern => { default => $self->{'timestamp_pattern'} },
+            time_zone => { default => $self->{time_zone} },
+            timestamp_pattern => { default => $self->{timestamp_pattern} },
             entry_ref => { default => $self->{entries} },
         }
     );
     
-    my @entries = @{$params{'entry_ref'}};
+    my @entries = @{$params{entry_ref}};
     if (not @entries) {
         croak "Object does not store entries. Eventually parse function were not run or log is empty.";
     }
 
     # Initialize timestamp parser
     my $ts_parser = DateTime::Format::Strptime->new( 
-                        pattern => $params{'timestamp_pattern'},
-                        time_zone => $params{'time_zone'}
+                        pattern => $params{timestamp_pattern},
+                        time_zone => $params{time_zone}
                     );
 
     my $from_dt;
     my $to_dt;
-    if ($params{'from'}) {
-        $from_dt = $ts_parser->parse_datetime($params{'from'});
+    if ($params{from}) {
+        $from_dt = $ts_parser->parse_datetime($params{from});
     } else {
         $from_dt = $entries[0]->timestamp;
     }
-    if ($params{'to'}) {
-        $to_dt = $ts_parser->parse_datetime($params{'to'});
+    if ($params{to}) {
+        $to_dt = $ts_parser->parse_datetime($params{to});
     } else {
         $to_dt = $entries[-1]->timestamp;
     }

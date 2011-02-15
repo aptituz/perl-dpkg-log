@@ -76,16 +76,7 @@ sub new {
                   }
     );
     my $self = {
-        'line' => $params{line},
-        'lineno' => $params{lineno},
-        'timestamp' => $params{timestamp} || "",
-        'associated_package' => $params{associated_package} || "",
-        'action' => $params{action} || "",
-        'status' => $params{status} || "",
-        'type' => $params{type} || "",
-        'subject' => $params{subject} || "",
-        'installed_version' => $params{installed_version} || "",
-        'available_version' => $params{available_version} || "",
+        %params
     };
     bless($self, $package);
     return $self;

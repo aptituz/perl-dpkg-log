@@ -75,6 +75,9 @@ sub analyse {
     my $self = shift;
     my $dpkg_log = $self->{dpkg_log};
 
+    $self->{from} = $dpkg_log->{from};
+    $self->{to} = $dpkg_log->{to};
+
     foreach my $entry ($dpkg_log->entries) {
         next if not $entry->associated_package;
         
@@ -144,7 +147,7 @@ sub unpacked_packages {
     my $self = shift;
     my @result;
     foreach my $package (keys %{$self->{packages}}) {
-        if ($self->{packages}->{$package}->{status} = "unpacked") {
+        if ($self->{packages}->{$package}->{status} eq "unpacked") {
             push(@result, $package);
         }
     }
@@ -160,7 +163,7 @@ sub halfinstalled_packages {
     my $self = shift;
     my @result;
     foreach my $package (keys %{$self->{packages}}) {
-        if ($self->{packages}->{$package}->{status} = "half-installed") {
+        if ($self->{packages}->{$package}->{status} eq "half-installed") {
             push(@result, $package);
         }
     }
@@ -176,7 +179,7 @@ sub halfconfigured_packages {
     my $self = shift;
     my @result;
     foreach my $package (keys %{$self->{packages}}) {
-        if ($self->{packages}->{$package}->{status} = "half-configured") {
+        if ($self->{packages}->{$package}->{status} eq "half-configured") {
             push(@result, $package);
         }
     }
