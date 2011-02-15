@@ -1,0 +1,45 @@
+[% IF hostname %]
+dpkg - Report for [% hostname %]
+
+-------------------------
+[% ELSE %]
+dpkg - Report for localhost
+---------------------------
+[% END %]
+
+[% IF from AND to %]
+Reporting period: [% from %] - [% to %]
+
+[% END %]
+
+[% IF newly_installed_packages %]
+Newly installed packages:
+[% FOREACH entry IN newly_installed_packages %]
+[% entry %][% " " %]
+[% END %]
+
+[% END %]
+
+[% IF upgraded_packages %]
+Upgraded packages:
+[% FOREACH entry IN upgraded_packages %]
+[% entry %][% " " %]
+[% END %]
+
+[% END %]
+
+[%IF removed_packages %]
+Removed packages:
+[% FOREACH entry IN removed_packages %]
+[% entry %][% " " %]
+[% END %]
+
+[% END %]
+
+[% IF halfconfigured_packages %]
+Packages in state "half-configured":
+[% FOREACH entry IN halfconfigured_packages %]
+[% entry %][% " " %]
+[% END %]
+
+[% END %]

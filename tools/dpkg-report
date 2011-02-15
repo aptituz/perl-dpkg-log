@@ -1,0 +1,47 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use lib 'lib';
+use DPKG::Log::Analyse;
+use Template;
+use Sys::Hostname;
+my $analyser = DPKG::Log::Analyse->new();
+$analyser->analyse;
+
+use Data::Dumper;
+my $hostname = hostname;
+
+sub generate_report {
+    my ($analyser, $template_file) = @_;
+
+    my @newly_installed_packages = $analyser->newly_installed_packages;
+    my @upgraded_packages = $analyser->upgraded_packages;
+    my @removed_packages = $analyser->removed_packages;
+    my @halfinstalled_packages = $analyser->halfinstalled_packages;
+    my @halfconfigured_packages = $analyser->halfconfigured_packages;
+
+
+    my $data = {
+        newly_installed_packages => \@newly_installed_packages,
+        upgraded_packages => \@upgraded_packages,
+        removed_packages => \@removed_packages,
+        halfinstalled_packages => \@halfinstalled_packages,
+        halfconfigured_packages => @halfconfigured_packages,
+        hostname => $hostname
+    };
+    my $template = Template->new(
+        {
+            INCLUDE_PATH    => '.',
+            INTERPOLATE     => 1,
+            POST_CHOMP      => 1,
+        }
+    );
+    my $input = $template_file;
+
+    $template->process($input, $data) or die $template->error;
+
+};
+
+generate_report($analyser, 'dpkg-report.tt2');
