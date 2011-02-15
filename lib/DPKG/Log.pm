@@ -130,7 +130,7 @@ sub parse {
     my $self = shift;
     open(my $log_fh, "<", $self->{filename})
         or croak("unable to open logfile for reading: $!");
-  
+ 
     my %params = validate(@_, { 
             'time_zone' => {  default => $self->{time_zone} },
             'timestamp_pattern' => { default => $self->{timestamp_pattern} },
@@ -301,19 +301,20 @@ values set during object initialisation.
 
 =cut
 sub get_datetime_info() {
+    my $self = shift;
+
     my $from;
     my $to;
-
     if ($self->{from}) {
         $from = $self->{from};
     } else {
-        $from = $entries[0]->timestamp;
+        $from = $self->{entries}->[0]->timestamp;
     }
 
     if ($self->{to}) {
         $to = $self->{to};
     } else {
-        $to = $entries[-1]->timestamp;
+        $to = $self->{entries}->[-1]->timestamp;
     }
     return ($from, $to);
 }
