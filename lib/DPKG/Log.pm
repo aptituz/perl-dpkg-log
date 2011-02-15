@@ -294,6 +294,30 @@ sub filter_by_time {
     return @entries;
 }
 
+=item ($from, $to) = $dpkg_log->get_datetime_info()
+
+Returns the from and to timestamps of the logfile or (if from/to values are set) the
+values set during object initialisation.
+
+=cut
+sub get_datetime_info() {
+    my $from;
+    my $to;
+
+    if ($self->{from}) {
+        $from = $self->{from};
+    } else {
+        $from = $entries[0]->timestamp;
+    }
+
+    if ($self->{to}) {
+        $to = $self->{to};
+    } else {
+        $to = $entries[-1]->timestamp;
+    }
+    return ($from, $to);
+}
+
 =back
 
 =head1 AUTHOR
