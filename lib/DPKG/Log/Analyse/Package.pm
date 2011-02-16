@@ -86,10 +86,41 @@ sub version {
         my $version_obj = Dpkg::Version->new($version);
         $self->{version} = $version_obj;
     } else {
-        return $self->{version};
+        $version = $self->{version};
     }
+    return $version;
 }
 
+=item $package->previous_version
+
+Return or set the previous version of this package.
+
+=cut
+sub previous_version {
+    my ($self, $previous_version) = @_;
+    if ($previous_version) {
+        my $version_obj = Dpkg::Version->new($previous_version);
+        $self->{previous_version} = $version_obj;
+    } else {
+        $previous_version = $self->{previous_version};
+    }
+    return $previous_version;
+}
+
+=item $package->status
+
+Return or set the status of this package.
+
+=cut
+sub status {
+    my ($self, $status) = @_;
+    if ($status) {
+        $self->{status} = $status;
+    } else {
+        $status = $self->{status}
+    }
+    return $status;
+}
 =back
 
 =head1 Overloading
@@ -119,7 +150,15 @@ sub equals {
 sub compare {
     my ($first, $second) = @_;
     return -1 if ($first->name ne $second->name);
-    return ($first->version <=> $second->version);
+    if ((not $first->previous_version) and (not $second->previous_version)) {
+        return ($first->version <=> $second->version);
+    } elsif ((not $first->previous_version) or (not $second->previous_version)) {
+        return -1;
+    } elsif ($first->previous_version != $second->previous_version) {
+        return -1;
+    }
+    
+    return (($first->version <=> $second->version));
 
 }
 
