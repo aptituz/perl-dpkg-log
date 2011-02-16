@@ -45,6 +45,7 @@ package DPKG::Log::Entry;
 
 use strict;
 use warnings;
+use overload ( '""' => 'line' );
 
 use Params::Validate qw(:all);
 
