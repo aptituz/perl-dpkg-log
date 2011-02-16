@@ -30,6 +30,7 @@ use warnings;
 
 use Carp;
 use DPKG::Log;
+use DPKG::Log::Analyse::Package;
 use Params::Validate qw(:all);
 
 =item $dpkg_log = DPKG::Log->new('filename' => 'dpkg.log')
@@ -50,11 +51,11 @@ sub new {
     my $self = {
         packages => {},
         newly_installed_packages => {},
+        installed_and_removed => {},
         removed_packages => {},
         upgraded_packages => {},
-        halfinstalled_packages => [],
-        halfconfigured_packages => [],
-
+        halfinstalled_packages => {},
+        halfconfigured_packages => {},
     };
 
     if ($params{'filename'}) {
@@ -87,36 +88,50 @@ sub analyse {
         # Initialize data structure if this is a package
         my $package = $entry->associated_package;
         if (not defined $self->{packages}->{$package}) {
-            $self->{packages}->{$package} = {};
+            $self->{packages}->{$package} = DPKG::Log::Analyse::Package->new('package' => $package);
         }
 
         if ($entry->type eq 'action') {
+            my $obj = $self->{packages}->{$package};
             if ($entry->action eq 'install') {
-                $self->{newly_installed_packages}->{$package} = 1;
-                $self->{packages}->{$package}->{new_version} = $entry->available_version;
+                $self->{newly_installed_packages}->{$package} = $obj;
+                $self->{packages}->{$package}->version($entry->available_version);
             } elsif ($entry->action eq 'upgrade') {
-                $self->{upgraded_packages}->{$package} = 1;
-                $self->{packages}->{$package}->{previous_version} = $entry->installed_version;
-                $self->{packages}->{$package}->{new_version} = $entry->available_version;
+                $self->{upgraded_packages}->{$package} = $obj;
+                $self->{packages}->{$package}->previous_version($entry->installed_version);
+                $self->{packages}->{$package}->version($entry->available_version);
             } elsif ($entry->action eq 'remove') {
-                $self->{removed_packages}->{$package} = 1;
-                $self->{packages}->{$package}->{previous_version} = $entry->installed_version;
+                $self->{removed_packages}->{$package} = $obj;
+                $self->{packages}->{$package}->previous_version($entry->installed_version);
             }
         } elsif ($entry->type eq 'status') {
-            $self->{packages}->{$package}->{status} = $entry->status;
+            $self->{packages}->{$package}->status($entry->status);
+            $self->{packages}->{$package}->version($entry->installed_version);
         }
     }
 
-    foreach my $package (keys %{$self->{packages}}) {
-        if ($self->{packages}->{$package}->{status} eq "half-installed") {
-            push(@{$self->{halfinstalled_packages}}, $package);
-            print "Package is $package is half-installed\n";
+    while (my ($package, $package_obj) = each %{$self->{packages}}) {
+        if ($self->{packages}->{$package}->status eq "half-installed") {
+            $self->{half_installed_packages}->{$package} = \$package_obj;
         }
-        if ($self->{packages}->{$package}->{status} eq "half-configured") {
-            push(@{$self->{halfconfigured_packages}}, $package);
-            print "Package is $package is half-configured\n";
+        if ($self->{packages}->{$package}->status eq "half-configured") {
+            $self->{half_configured_packages}->{$package} = \$package_obj;
+        }
+        if ($self->{packages}->{$package}->status eq "unpacked") {
+            $self->{half_configured_packages}->{$package} = \$package_obj;
         }
     }
+
+    # Remove packages from "newly_installed" if installed_version is empty
+    while (my ($package, $package_obj) = each %{$self->{newly_installed_packages}}) {
+        if (not $package_obj->version) {
+            delete($self->{newly_installed_packages}->{$package});
+            $self->{installed_and_removed_packages}->{$package} = $package_obj;
+        }
+    }
+
+    # Forget about the log object once analysis is done
+    $self->{dpkg_log} = undef;
 }
 
 =item $analyser->newly_installed_packages
@@ -126,7 +141,7 @@ Return all packages which were newly installed in the dpkg.log.
 =cut
 sub newly_installed_packages {
     my $self = shift;
-    return keys %{$self->{newly_installed_packages}};
+    return $self->{newly_installed_packages};
 }
 
 =item $analyser->upgraded_packages
@@ -137,7 +152,7 @@ Return all packages which were upgraded in the dpkg.log.
 =cut
 sub upgraded_packages {
     my $self = shift;
-    return keys %{$self->{upgraded_packages}};
+    return $self->{upgraded_packages};
 }
 
 =item $analyser->removed_packages
@@ -148,7 +163,7 @@ Return all packages which were removed in the dpkg.log.
 =cut
 sub removed_packages {
     my $self = shift;
-    return keys %{$self->{removed_packages}};
+    return $self->{removed_packages};
 }
 
 =item $analyser->unpacked_packages
@@ -159,12 +174,7 @@ Return all packages which are left in state 'unpacked'.
 =cut
 sub unpacked_packages {
     my $self = shift;
-    my @result;
-    foreach my $package (keys %{$self->{packages}}) {
-        if ($self->{packages}->{$package}->{status} eq "unpacked") {
-            push(@result, $package);
-        }
-    }
+    return $self->{unpacked_packages};
 }
 
 =item $analyser->halfinstalled_packages
@@ -175,7 +185,7 @@ Return all packages which are left in state 'half-installed'.
 =cut
 sub halfinstalled_packages {
     my $self = shift;
-    return @{$self->{halfinstalled_packages}};
+    return $self->{halfinstalled_packages};
 }
 
 =item $analyser->halfconfigured_packages
@@ -186,8 +196,19 @@ Return all packages which are left in state 'half-configured'.
 =cut
 sub halfconfigured_packages {
     my $self = shift;
-    return @{$self->{halfconfigured_packages}};
+    return $self->{halfconfigured_packages};
 }
+
+=item $analyser->installed_and_removed_packages
+
+Return all packages which got installed and removed.
+
+=cut
+sub installed_and_removed_packages {
+    my $self = shift;
+    return $self->{installed_and_removed_packages};
+}
+
 =back
 
 =head1 AUTHOR
