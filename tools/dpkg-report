@@ -11,18 +11,25 @@ use Template;
 use DPKG::Log::Analyse;
 use Params::Validate;
 use Data::Dumper;
+use List::MoreUtils qw(uniq all);
 
 # Initialize defaults
 my $hostname = hostname;
 my @logfiles;
 my $template_file = 'dpkg-report.tt2';
 my @template_dirs = ('.', '/etc/dpkg-report/templates' );
-
+my $merge = 0;
+my $overall_packages;
+my $common_packages = { 'hostname' => 'all' };
+my $data_g = {};
+my @keys = qw(  newly_installed_packages upgraded_packages removed_packages
+                halfinstalled_packages halfconfigured_packages installed_and_removed_packages );
 GetOptions(
     "hostname=s" => \$hostname,
     "log-file=s" => \@logfiles,
     "template-file=s" => \$template_file,
     "template-path=s" => \@template_dirs,
+    "merge" => \$merge
 );
 
 if (not @logfiles) {
@@ -47,35 +54,34 @@ sub gather_data {
     $analyser->analyse;
 
     # Get data
-    my @newly_installed_packages = $analyser->newly_installed_packages;
-    my @upgraded_packages = $analyser->upgraded_packages;
-    my @removed_packages = $analyser->removed_packages;
-    my @halfinstalled_packages = $analyser->halfinstalled_packages;
-    my @halfconfigured_packages = $analyser->halfconfigured_packages;
-
     my $data = {
-        newly_installed_packages => \@newly_installed_packages,
-        upgraded_packages => \@upgraded_packages,
-        removed_packages => \@removed_packages,
-        hostname => $params{'hostname'}
+        hostname => $params{'hostname'},
+        newly_installed_packages => $analyser->newly_installed_packages,
+        upgraded_packages => $analyser->upgraded_packages,
+        removed_packages => $analyser->removed_packages,
+        halfinstalled_packages => $analyser->halfinstalled_packages,
+        halfconfigured_packages => $analyser->halfconfigured_packages,
+        installed_and_removed_packages => $analyser->installed_and_removed_packages
     };
-    
-    if (@halfconfigured_packages) {
-        $data->{halfconfigured_packages} = \@halfconfigured_packages
-    }
 
-    if (@halfinstalled_packages) {
-        $data->{halfinstalled_packages} = \@halfinstalled_packages
+    foreach my $key (@keys) {
+        if (not $overall_packages->{$key}) {
+            $overall_packages->{$key} = [];
+        }
+        while (my ($package, $package_obj) = (each %{$data->{$key}})) {
+            push(@{$overall_packages->{$key}}, $package_obj);
+        }
     }
-
     return $data;
 }
+
 sub generate_report {
     my %params = validate( @_,
         {
             template_file => { default => $template_file },
             template_dirs =>  { default => \@template_dirs },
-            data => { default => {} }
+            data => { default => {} },
+            no_filter => 0,
         }
     );
     my $template = Template->new(
@@ -86,14 +92,55 @@ sub generate_report {
         }
     );
 
-    $template->process($params{template_file}, $params{data}) or die $template->error;
+
+    my $data = { hostname => $params{'data'}->{hostname} };
+    # Create simplified datastructure for template toolkit
+    foreach my $key (@keys) {
+            while (my ($package, $package_obj) = each %{$params{'data'}->{$key}}) {
+                next if $common_packages->{$key}->{$package} and $merge and not $params{'no_filter'};
+
+                if (not $data->{$key}) {
+                    $data->{$key} = [];
+                }
+                push(@{$data->{$key}},
+                    {
+                        name => $package_obj->name,
+                        version => sprintf("%s", $package_obj->version),
+                        old_version => sprintf("%s", $package_obj->previous_version),
+                        status => $package_obj->status
+                    }
+                );
+            }
+    }
+    $template->process($params{template_file}, $data) or die $template->error;
 
 }
 
 foreach my $logfile (@logfiles) {
+    my $data;
     if (-d $logfile) {
-        map {  generate_report(template_file => $template_file, data => gather_data(logfile => $_)) } glob($logfile."/*");
+        map {  $data = gather_data(logfile => $_); $data_g->{$data->{hostname}} = $data } glob($logfile."/*");
     } else {
-        generate_report(template_file => $template_file, data => gather_data(logfile => $logfile));
+        $data = gather_data(logfile => $logfile); $data_g->{$data->{hostname}} = $data;
     }
+}
+
+if ($merge) {
+    foreach my $key (@keys) {
+        foreach my $pkg (@{$overall_packages->{$key}}) {
+            my $name = $pkg->name;
+            if (all { $data_g->{$_}->{$key}->{$name} 
+                        and $data_g->{$_}->{$key}->{$name} == $pkg }  (keys %{$data_g})) {
+                                # Package is common to all logfiles
+                                $common_packages->{$key}->{$name} = $pkg;
+                            }
+        }
+    }
+
+    # Print report for 'all' systems first
+    generate_report(data => $common_packages, no_filter => 1);
+}
+
+while (my ($hostname, $data) = each %{$data_g}) {
+    generate_report(data => $data);
 }
