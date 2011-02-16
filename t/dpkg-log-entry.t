@@ -1,4 +1,4 @@
-use Test::More tests => 55;
+use Test::More tests => 63;
 use lib 'lib';
 use DPKG::Log;
 
@@ -33,6 +33,17 @@ isa_ok($entry->timestamp, "DateTime", "timestamp attribute");
 is($entry->action, "configure", "entry $entry_no has correct action");
 is($entry->type, "startup", "entry $entry_no has correct type");
 is($entry->subject, "packages", "entry $entry_no has correct subject");
+
+$entry = $dpkg_log->next_entry;
+$old_line = $line;
+ok($line = $entry->line, "line is stored in entry");
+ok($entry_no = $entry->lineno, "lineno is stored in entry");
+ok($entry->timestamp, "entry $entry_no has timestamp");
+isa_ok($entry->timestamp, "DateTime", "timestamp attribute");
+is($entry->action, "install", "entry $entry_no has correct action");
+is($entry->type, "action", "entry $entry_no has correct type");
+is($entry->subject, "package", "entry $entry_no has correct subject");
+is($entry->associated_package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
 
 $entry = $dpkg_log->next_entry;
 $old_line = $line;
