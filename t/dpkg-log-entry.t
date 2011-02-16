@@ -99,9 +99,3 @@ is($entry->type, "status", "entry $entry_no has correct type");
 is($entry->subject, "package", "entry $entry_no has correct subject");
 is($entry->associated_package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
 is($entry->installed_version, "1.5000-1", "entry $entry_no has correct installed_version");
-
-#2011-02-11 12:29:47 configure libdatetime-format-strptime-perl 1.5000-1 1.5000-1
-#2011-02-11 12:29:47 status unpacked libdatetime-format-strptime-perl 1.5000-1
-#2011-02-11 12:29:47 status half-configured libdatetime-format-strptime-perl 1.5000-1
-#2011-02-11 12:29:47 status installed libdatetime-format-strptime-perl 1.5000-1
-#
