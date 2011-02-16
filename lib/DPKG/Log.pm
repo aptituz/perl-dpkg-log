@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use 5.010;
 
-our $VERSION = "0.01";
+our $VERSION = "1.00";
 
 use Carp;
 use DPKG::Log::Entry;

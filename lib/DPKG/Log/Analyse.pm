@@ -22,7 +22,7 @@ This module is used to analyse a dpkg log.
 
 =cut
 
-our $VERSION = "0.01";
+our $VERSION = "1.00";
 
 use 5.010;
 use strict;
