@@ -34,17 +34,14 @@ use DateTime::TimeZone;
 use Params::Validate qw(:all);
 use Data::Dumper;
 
-# 2011-02-03 07:54:46
-our $timestamp_re = '([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})';
-
-# 2011-02-03 07:54:59 startup packages configure
-our $startup_line_re = "$timestamp_re startup ([^ ]+) ([^ ]+)";
-
-# 2011-02-03 07:54:59 status unpacked libproc-processtable-perl 0.45-1
-our $status_line_re = "$timestamp_re status ([^ ]+) ([^ ]+) ([^ ]+)";
-
-# 2011-02-03 07:54:59 configure libproc-daemon-perl 0.06-1 0.06-1
-our $action_line_re = "$timestamp_re ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)";
+our $actions = {
+        'install' => 1,
+        'configure' => 1,
+        'trigproc' => 1,
+        'upgrade' => 1,
+        'remove' => 1,
+        'purge' => 1,
+};
 
 =item $dpkg_log = DPKG::Log->new()
 
@@ -90,6 +87,7 @@ sub new {
         time_zone => undef,
         from => undef,
         to => undef,
+        offset => 0,
         %params
     
     };
@@ -148,44 +146,86 @@ sub parse {
     my $lineno = 0;
     while  (my $line = <$log_fh>) {
         $lineno++;
-    
-        my $parse_status = 0;
-        my $timestamp;
-    
-        if ($line =~ /^$timestamp_re/o) {
-            $timestamp = $ts_parser->parse_datetime($1);
-        } else {
-            push(@{$self->{invalid_lines}}, $line);
-            next;
-        }
-
-        my $entry = DPKG::Log::Entry->new( line => $line, lineno => $lineno, timestamp => $timestamp );
-        
         chomp $line;
+        next if $line =~ /^$/;
 
-        if ($line =~ /^$startup_line_re/o) {
-            $entry->type('startup');
-            $entry->subject($2);
-            $entry->action($3);
-        } elsif ($line =~ /^$status_line_re/o) {
-            $entry->type('status');
-            $entry->subject('package');
-            $entry->status($2);
-            $entry->associated_package($3);
-            $entry->installed_version($4);
-         } elsif ($line =~ /^$action_line_re/o) {
-            $entry->subject('package');
-            $entry->type('action');
-            $entry->action($2);
-            $entry->associated_package($3);
-            $entry->installed_version($4);
-            $entry->available_version($5);
+        my $timestamp;
+              
+        my @entry = split(/\s/, $line);
+        my ($year, $month, $day) = split('-', $entry[0]);
+        my ($hour, $minute, $second) = split(':', $entry[1]);
+        #. " " . $entry[1];
+        #@entry = splice(@entry, 2);
+
+        if ($year and $month and $day and $hour and $minute and $second) {
+            $timestamp = DateTime->new(
+                year => $year,
+                month => $month,
+                day => $day,
+                hour => $hour,
+                minute => $minute,
+                second => $second,
+                time_zone => $tz
+            );
         } else {
             push(@{$self->{invalid_lines}}, $line);
             next;
         }
 
-        push(@{$self->{entries}}, $entry);
+        my $entry_obj;
+#= DPKG::Log::Entry->new( line => $line, lineno => $lineno, timestamp => $timestamp );
+        
+        # 2011-02-03 07:54:59 startup packages configure
+        # 2011-02-03 07:54:59 status unpacked libproc-processtable-perl 0.45-1
+        # 2011-02-03 07:54:59 configure libproc-daemon-perl 0.06-1 0.06-1
+        # 2010-12-13 11:50:03 conffile /etc/sudoers keep
+        if ($entry[2] eq "update-alternatives:") {
+            next;
+        } elsif ($entry[2] eq "startup") {
+            $entry_obj = {  line => $line,
+                lineno => $lineno,
+                timestamp => $timestamp,
+                type => 'startup',
+                subject => $entry[3],
+                action => $entry[4]
+            };
+        } elsif ($entry[2] eq "status") {
+            $entry_obj = { line => $line,
+                lineno => $lineno,
+                timestamp => $timestamp,
+                type => 'status',
+                subject => 'package',
+                status => $entry[3],
+                associated_package => $entry[4],
+                installed_version => $entry[5]
+            };
+         } elsif (defined($actions->{$entry[2]}) ) {
+            $entry_obj = { line => $line,
+                lineno => $lineno,
+                timestamp => $timestamp,
+                subject => 'package',
+                type => 'action',
+                action => $entry[2],
+                associated_package => $entry[3],
+                installed_version => $entry[4],
+                available_version => $entry[5]
+            };
+        } elsif ($entry[2] eq "conffile") {
+            $entry_obj = { line => $line,
+                lineno => $lineno,
+                timestamp => $timestamp,
+                subject => 'conffile',
+                type => 'conffile_action',
+                conffile => $entry[3],
+                decision => $entry[4]
+            };
+        } else {
+            print $line . " invalid\n";
+            push(@{$self->{invalid_lines}}, $line);
+            next;
+        }
+
+        push(@{$self->{entries}}, $entry_obj);
     }
     close($log_fh);
 
@@ -221,7 +261,7 @@ sub entries {
     croak "Object does not store entries. Eventually parse function were not run or log is empty. " if (not @{$self->{entries}});
 
     if (not ($params{from} or $params{to})) {
-        return @{$self->{entries}};
+        return map { DPKG::Log::Entry->new($_) } @{$self->{entries}};
     } else {
         return $self->filter_by_time(%params);
     }
@@ -229,13 +269,13 @@ sub entries {
 
 =item $entry = $dpkg_log->next_entry;
 
-Return the next entry. Beware that this function shifts the next entry and therefore
-changes the object.
+Return the next entry. 
 
 =cut
 sub next_entry {
     my $self = shift;
-    return shift(@{$self->{entries}});
+    my $offset = $self->{offset}++;
+    return DPKG::Log::Entry->new(@{$self->{entries}}[$offset]);
 }
 
 =item @entries = $dpkg_log->filter_by_time(from => ts, to => ts)
@@ -271,8 +311,8 @@ sub filter_by_time {
 
     $self->__eval_datetime_info(%params);
 
-    @entries = grep { ($_->timestamp >= $self->{from}) and ($_->timestamp <= $self->{to}) } @entries;
-    return @entries;
+    @entries = grep { (DPKG::Log::Entry->new($_)->timestamp >= $self->{from}) and (DPKG::Log::Entry->new($_)->timestamp <= $self->{to}) } @entries;
+    return map { DPKG::Log::Entry->new($_) } @entries;
 }
 
 =item ($from, $to) = $dpkg_log->get_datetime_info()
@@ -289,13 +329,13 @@ sub get_datetime_info() {
     if ($self->{from}) {
         $from = $self->{from};
     } else {
-        $from = $self->{entries}->[0]->timestamp;
+        $from = DPKG::Log::Entry->new(%{$self->{entries}->[0]})->timestamp;
     }
 
     if ($self->{to}) {
         $to = $self->{to};
     } else {
-        $to = $self->{entries}->[-1]->timestamp;
+        $to = DPKG::Log::Entry->new(%{$self->{entries}->[-1]})->timestamp;
     }
     return ($from, $to);
 }
@@ -323,10 +363,11 @@ sub __eval_datetime_info {
     );
 
     if (not $from) {
-        $from = $entry_ref->[0]->timestamp;
+        $from = DPKG::Log::Entry->new($entry_ref->[0])->timestamp;
+        print Dumper($from);
     }
     if (not $to) {
-        $to = $entry_ref->[-1]->timestamp;
+        $to = DPKG::Log::Entry->new($entry_ref->[-1])->timestamp;
     }
     if (ref($from) ne "DateTime") {
         $from = $ts_parser->parse_datetime($from);

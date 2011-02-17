@@ -25,7 +25,7 @@ is(scalar(@entries), 78, 'Number of entries is correct');
 
 ok($dpkg_log = DPKG::Log->new('filename' => 'test_data/from_to.log',
         'from' => '2011-02-02',
-        'to' => '2011-02-02',
+        'to' => '2011-02-03',
         'timestamp_pattern' => '%F'),
         'Initialize DPKG::Log object with limited time range and custom pattern');
 $dpkg_log->parse;

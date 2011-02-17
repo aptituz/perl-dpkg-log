@@ -74,7 +74,9 @@ sub new {
                     'type' => '',
                     'installed_version' => '',
                     'available_version' => '',
-                  }
+                    'decision' => '',
+                    'conffile' => '',
+                 }
     );
     my $self = {
         %params
@@ -238,6 +240,34 @@ sub available_version {
        $self->{'available_version'} = $available_version;
     } else {
         $available_version = $self->{available_version};
+    }
+}
+
+=item $dpkg_log_entry->conffile() / conffile
+
+Get or set a conffile for a line indicating a conffile change.
+
+=cut
+sub conffile {
+    my ($self, $conffile) = @_;
+    if ($conffile) {
+        $self->{conffile} = $conffile;
+    } else {
+        $conffile = $self->{conffile};
+    }
+}
+
+=item $dpkg_log_entry->decision() / decision
+
+Gets or defines the decision for a line indicating a conffile change.
+
+=cut
+sub decision {
+    my ($self, $decision) = @_;
+    if ($decision) {
+        $self->{decision} = $decision;
+    } else {
+        $decision = $self->{decision}
     }
 }
 
