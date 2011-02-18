@@ -22,11 +22,11 @@ This module is used to analyse a dpkg log.
 
 =cut
 
-our $VERSION = "1.00";
-
-use 5.010;
 use strict;
 use warnings;
+use 5.010;
+
+our $VERSION = "1.00";
 
 use Carp;
 use DPKG::Log;
@@ -132,6 +132,8 @@ sub analyse {
 
     # Forget about the log object once analysis is done
     $self->{dpkg_log} = undef;
+
+    return;
 }
 
 =item $analyser->newly_installed_packages

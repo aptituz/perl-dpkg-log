@@ -311,7 +311,7 @@ Returns the from and to timestamps of the logfile or (if from/to values are set)
 values set during object initialisation.
 
 =cut
-sub get_datetime_info() {
+sub get_datetime_info {
     my $self = shift;
 
     my $from;
@@ -369,6 +369,7 @@ sub __eval_datetime_info {
 
     $self->{from} = $from;
     $self->{to} = $to;
+    return;
 }
 
 
