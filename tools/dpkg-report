@@ -17,13 +17,15 @@ use List::MoreUtils qw(uniq all);
 my $hostname = hostname;
 my @logfiles;
 my $template_file = 'dpkg-report.tt2';
-my @template_dirs = ('.', '/etc/dpkg-report/templates' );
+my @template_dirs = (dirname($0), '.', '/etc/dpkg-report/templates' );
 my $merge = 0;
 my $overall_packages;
 my $common_packages = { 'hostname' => 'all' };
 my $data_g = {};
 my @keys = qw(  newly_installed_packages upgraded_packages removed_packages
                 halfinstalled_packages halfconfigured_packages installed_and_removed_packages );
+
+
 GetOptions(
     "hostname=s" => \$hostname,
     "log-file=s" => \@logfiles,

@@ -6,40 +6,38 @@ dpkg - Report for [% hostname %]
 dpkg - Report for localhost
 ---------------------------
 [% END %]
-
 [% IF from AND to %]
 Reporting period: [% from %] - [% to %]
 
 [% END %]
-
 [% IF newly_installed_packages %]
 Newly installed packages:
-[% FOREACH entry IN newly_installed_packages %]
-[% entry %][% " " %]
-[% END %]
+[% FOREACH package IN newly_installed_packages.sort('name') %]
+[% package.name %]
 
 [% END %]
-
+[% END %]
 [% IF upgraded_packages %]
+
 Upgraded packages:
-[% FOREACH entry IN upgraded_packages %]
-[% entry %][% " " %]
+[% FOREACH package IN upgraded_packages.sort('name') %]
+[% package.name %] ([% package.old_version %] -> [% package.version %])
 [% END %]
-
 [% END %]
+[% IF removed_packages %]
 
-[%IF removed_packages %]
 Removed packages:
-[% FOREACH entry IN removed_packages %]
-[% entry %][% " " %]
-[% END %]
+[% FOREACH package IN removed_packages.sort('name') %]
+[% package.name %][% " " %]
 
 [% END %]
-
+[% END %]
 [% IF halfconfigured_packages %]
+
 Packages in state "half-configured":
-[% FOREACH entry IN halfconfigured_packages %]
+[% FOREACH entry IN halfconfigured_packages.sort('name') %]
 [% entry %][% " " %]
-[% END %]
 
 [% END %]
+[% END %]
+
