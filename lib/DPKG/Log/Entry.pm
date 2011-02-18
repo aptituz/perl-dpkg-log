@@ -47,7 +47,27 @@ use strict;
 use warnings;
 use overload ( '""' => 'line' );
 
+require Exporter;
+our @ISA = qw(Exporter);
+our @EXPORT = qw( $valid_types $valid_actions );
+
 our $VERSION = '1.00';
+our $valid_types = {
+    status => 1,
+    action => 1,
+    startup => 1,
+    conffile_action => 1
+    
+};
+
+our $valid_actions = {
+   'install' => 1,
+   'configure' => 1,
+   'trigproc' => 1,
+   'upgrade' => 1,
+   'remove' => 1,
+   'purge' => 1,
+};
 
 use Params::Validate qw(:all);
 
@@ -118,7 +138,11 @@ Get or set the timestamp of this object. Should be a DateTime object.
 =cut
 sub timestamp {
     my ($self, $timestamp) = @_;
+
     if ($timestamp) {
+        if ((not ref($timestamp)) or (ref($timestamp) ne "DateTime")) {
+            croak("timestamp has to be a DateTime object");
+        }
         $self->{timestamp} = $timestamp;
     } else {
         $timestamp = $self->{timestamp};
@@ -136,6 +160,9 @@ sub type {
     my ($self, $type) = @_;
 
     if ($type) {
+        if (not defined($valid_types->{$type})) {
+            croak("$type is not a valid type. has to be one of ".join(",", keys %{$valid_types}));
+        }
         $self->{type} = $type;
     } else {
         $type = $self->{type}
@@ -171,6 +198,9 @@ sub action {
     my ($self, $action) = @_;
 
     if ($action) {
+        if (not defined($valid_actions->{$action})) {
+            croak("$action is not a valid action. has to be one of ".join(",", keys %{$valid_actions}));
+        }
         $self->{action} = $action;
     } else {
         $action = $self->{action};
@@ -274,10 +304,13 @@ sub decision {
 }
 
 =back
+=head1 SEE ALSO
+
+L<DateTime>
 
 =head1 AUTHOR
 
-This module was written by Patrick Schoenfeld <schoenfeld@debian.org>.
+Patrick Schoenfeld <schoenfeld@debian.org>.
 
 =head1 COPYRIGHT AND LICENSE
 

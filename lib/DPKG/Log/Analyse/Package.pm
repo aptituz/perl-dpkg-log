@@ -173,9 +173,13 @@ sub as_string {
 }
 =back
 
+=head1 SEE ALSO
+
+L<DPKG::Log>, L<DPKG::Version>
+
 =head1 AUTHOR
 
-This module was written by Patrick Schoenfeld <schoenfeld@debian.org>.
+Patrick Schoenfeld <schoenfeld@debian.org>.
 
 =head1 COPYRIGHT AND LICENSE
 

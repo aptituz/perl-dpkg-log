@@ -34,15 +34,6 @@ use DateTime::TimeZone;
 use Params::Validate qw(:all);
 use Data::Dumper;
 
-our $actions = {
-        'install' => 1,
-        'configure' => 1,
-        'trigproc' => 1,
-        'upgrade' => 1,
-        'remove' => 1,
-        'purge' => 1,
-};
-
 =item $dpkg_log = DPKG::Log->new()
 
 =item $dpkg_log = DPKG::Log->new('filename' => 'dpkg.log')
@@ -199,7 +190,7 @@ sub parse {
                 associated_package => $entry[4],
                 installed_version => $entry[5]
             };
-         } elsif (defined($actions->{$entry[2]}) ) {
+         } elsif (defined($valid_actions->{$entry[2]}) ) {
             $entry_obj = { line => $line,
                 lineno => $lineno,
                 timestamp => $timestamp,
@@ -383,9 +374,13 @@ sub __eval_datetime_info {
 
 =back
 
+=head1 SEE ALSO
+
+L<DPKG::Log::Entry>, L<DateTime>, L<DateTime::TimeZone>
+
 =head1 AUTHOR
 
-This module was written by Patrick Schoenfeld <schoenfeld@debian.org>.
+Patrick Schoenfeld <schoenfeld@debian.org>.
 
 =head1 COPYRIGHT AND LICENSE
 

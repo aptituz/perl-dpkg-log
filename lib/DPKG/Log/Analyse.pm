@@ -211,9 +211,13 @@ sub installed_and_removed_packages {
 
 =back
 
+=head1 SEE ALSO
+
+L<DPKG::Log>, L<DPKG::Log::Analyse::Package>
+
 =head1 AUTHOR
 
-This module was written by Patrick Schoenfeld <schoenfeld@debian.org>.
+Patrick Schoenfeld <schoenfeld@debian.org>.
 
 =head1 COPYRIGHT AND LICENSE
 
