@@ -47,6 +47,8 @@ use strict;
 use warnings;
 use overload ( '""' => 'line' );
 
+our $VERSION = '1.00';
+
 use Params::Validate qw(:all);
 
 =item $dpkg_log_entry = PACKAGE->new( 'line' => $line, 'lineno' => $lineno )
