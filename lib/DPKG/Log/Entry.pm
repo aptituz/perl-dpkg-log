@@ -306,6 +306,7 @@ sub decision {
 }
 
 =back
+
 =head1 SEE ALSO
 
 L<DateTime>

@@ -171,7 +171,6 @@ sub as_string {
     }
     return $string;
 }
-=back
 
 =head1 SEE ALSO
 
