@@ -274,6 +274,7 @@ sub available_version {
     } else {
         $available_version = $self->{available_version};
     }
+    return $available_version;
 }
 
 =item $dpkg_log_entry->conffile() / conffile
