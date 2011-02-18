@@ -277,11 +277,11 @@ sub decision {
 
 =head1 AUTHOR
 
-This module was written by Patrick Schoenfeld <patrick.schoenfeld@credativ.de>.
+This module was written by Patrick Schoenfeld <schoenfeld@debian.org>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2011 Patrick Schoenfeld <patrick.schoenfeld@credativ.de>
+Copyright (C) 2011 Patrick Schoenfeld <schoenfeld@debian.org>
 
 This library is free software.
 You can redistribute it and/or modify it under the same terms as perl itself.
