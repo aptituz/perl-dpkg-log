@@ -85,20 +85,21 @@ as 'key' => 'value' pairs.
 =cut
 sub new {
     my $package = shift;
-    my %params = validate( @_, { 
-                    'line' => { 'type' => SCALAR },
-                    'lineno' => { 'type' => SCALAR },
-                    'timestamp' => '',
-                    'associated_package' => '',
-                    'action' => '',
-                    'status' => '',
-                    'subject' => '',
-                    'type' => '',
-                    'installed_version' => '',
-                    'available_version' => '',
-                    'decision' => '',
-                    'conffile' => '',
-                 }
+    my %params = validate( 
+        @_, { 
+                'line' => { 'type' => SCALAR },
+                'lineno' => { 'type' => SCALAR },
+                'timestamp' => '',
+                'associated_package' => '',
+                'action' => '',
+                'status' => '',
+                'subject' => '',
+                'type' => '',
+                'installed_version' => '',
+                'available_version' => '',
+                'decision' => '',
+                'conffile' => '',
+             }
     );
     my $self = {
         %params

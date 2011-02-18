@@ -42,10 +42,10 @@ Filename parameter can be ommitted, it defaults to /var/log/dpkg.log.
 sub new {
     my $package = shift;
 
-    my %params = validate(@_,
-        {
-            'filename' => { 'type' => SCALAR, 'default' => '/var/log/dpkg.log' },
-        }
+    my %params = validate(
+        @_, {
+                'filename' => { 'type' => SCALAR, 'default' => '/var/log/dpkg.log' },
+            }
     );
     
     my $self = {

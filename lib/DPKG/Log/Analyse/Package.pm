@@ -46,13 +46,13 @@ Returns a new DPKG::Log::Analyse::Package object.
 sub new {
     my $package = shift;
 
-    my %params = validate(@_,
-        {
-            'package' => { 'type' => SCALAR },
-            'version' => 0,
-            'previous_version' => 0,
-            'status' => 0
-        }
+    my %params = validate(
+        @_, {
+                'package' => { 'type' => SCALAR },
+                'version' => 0,
+                'previous_version' => 0,
+                'status' => 0
+            }
     );
     
     my $self = {

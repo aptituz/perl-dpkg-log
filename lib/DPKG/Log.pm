@@ -120,19 +120,21 @@ sub parse {
     open(my $log_fh, "<", $self->{filename})
         or croak("unable to open logfile for reading: $!");
  
-    my %params = validate(@_, {
-            'from' => { default => $self->{from} },
-            'to' => { default => $self->{to} }, 
-            'time_zone' => {  default => $self->{time_zone} },
-            'timestamp_pattern' => { default => $self->{timestamp_pattern} },
-        } );
+    my %params = validate(
+        @_, {
+                'from' => { default => $self->{from} },
+                'to' => { default => $self->{to} }, 
+                'time_zone' => {  default => $self->{time_zone} },
+                'timestamp_pattern' => { default => $self->{timestamp_pattern} },
+            }
+    );
 
     # Determine system timezone
     my $tz =  DateTime::TimeZone->new( 'name' => $params{time_zone} );
     my $ts_parser = DateTime::Format::Strptime->new( 
-                        pattern => $params{timestamp_pattern},
-                        time_zone => $params{time_zone}
-                    );
+        pattern => $params{timestamp_pattern},
+        time_zone => $params{time_zone}
+    );
 
     my $lineno = 0;
     while  (my $line = <$log_fh>) {
@@ -143,10 +145,13 @@ sub parse {
         my $timestamp;
               
         my @entry = split(/\s/, $line);
+        if (not $entry[0] and not $entry[1]) {
+            push(@{$self->{invalid_lines}}, $line);
+            next;
+        }
+
         my ($year, $month, $day) = split('-', $entry[0]);
         my ($hour, $minute, $second) = split(':', $entry[1]);
-        #. " " . $entry[1];
-        #@entry = splice(@entry, 2);
 
         if ($year and $month and $day and $hour and $minute and $second) {
             $timestamp = DateTime->new(
@@ -164,12 +169,6 @@ sub parse {
         }
 
         my $entry_obj;
-#= DPKG::Log::Entry->new( line => $line, lineno => $lineno, timestamp => $timestamp );
-        
-        # 2011-02-03 07:54:59 startup packages configure
-        # 2011-02-03 07:54:59 status unpacked libproc-processtable-perl 0.45-1
-        # 2011-02-03 07:54:59 configure libproc-daemon-perl 0.06-1 0.06-1
-        # 2010-12-13 11:50:03 conffile /etc/sudoers keep
         if ($entry[2] eq "update-alternatives:") {
             next;
         } elsif ($entry[2] eq "startup") {
@@ -242,12 +241,12 @@ If only B<from> is specified all entries till the end of the log are read.
 sub entries {
     my $self = shift;
 
-    my %params = validate(@_, 
-                {  
-                    from => 0,
-                    to => 0,
-                    time_zone => { type => SCALAR, default => $self->{time_zone} }
-                }
+    my %params = validate(
+        @_, {  
+                from => 0,
+                to => 0,
+                time_zone => { type => SCALAR, default => $self->{time_zone} }
+            }
     );
     croak "Object does not store entries. Eventually parse function were not run or log is empty. " if (not @{$self->{entries}});
 
@@ -285,14 +284,14 @@ as input source for the entries which are to be filtered.
 =cut
 sub filter_by_time {
     my $self = shift;
-    my %params = validate( @_,
-        {
-            from => 0,
-            to => 0,
-            time_zone => { default => $self->{time_zone} },
-            timestamp_pattern => { default => $self->{timestamp_pattern} },
-            entry_ref => { default => $self->{entries} },
-        }
+    my %params = validate( 
+        @_, {
+                from => 0,
+                to => 0,
+                time_zone => { default => $self->{time_zone} },
+                timestamp_pattern => { default => $self->{timestamp_pattern} },
+                entry_ref => { default => $self->{entries} },
+            }
     );
     
     my @entries = @{$params{entry_ref}};
@@ -335,14 +334,15 @@ sub get_datetime_info() {
 sub __eval_datetime_info {
     my $self = shift;
     
-    my %params = validate(@_,
-        {
-            from => { default => $self->{from} },
-            to => { default => $self->{to} },
-            time_zone => { default => $self->{time_zone} },
-            timestamp_pattern => { default => $self->{timestamp_pattern} },
-            entry_ref => { default => $self->{entries} },
-        });
+    my %params = validate(
+        @_, {
+                from => { default => $self->{from} },
+                to => { default => $self->{to} },
+                time_zone => { default => $self->{time_zone} },
+                timestamp_pattern => { default => $self->{timestamp_pattern} },
+                entry_ref => { default => $self->{entries} },
+            }
+    );
 
     my $entry_ref = $params{entry_ref};
     my $from = $params{from};
