@@ -5,5 +5,6 @@ Revision history for Perl extension DPKG::Log.
       a value.
     - Fixed some perlcritic critics
     - Fixed various POD problems
+    - Use test_data/dpkg.log in t/dpkg-log.t
 1.00  Fri Feb 18 10:00:00 2011
 	- Initial version
