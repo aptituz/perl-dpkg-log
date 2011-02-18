@@ -84,6 +84,9 @@ sub new {
     };
 
     bless($self, $package);
+    
+    $self->parse if $params{'parse'};
+
     return $self;
 }
 

@@ -3,6 +3,7 @@ Revision history for Perl extension DPKG::Log.
 1.10  Fri Feb 18 14:35:00 2011
     - Bugfix in DPKG::Log::Entry: available_version did not return
       a value.
+    - Bugfix in DPKG::Log: Handle parse param properly
     - Fixed some perlcritic critics
     - Fixed various POD problems
     - Use test_data/dpkg.log in t/dpkg-log.t
