@@ -369,7 +369,6 @@ sub __eval_datetime_info {
 
     if (not $from) {
         $from = DPKG::Log::Entry->new($entry_ref->[0])->timestamp;
-        print Dumper($from);
     }
     if (not $to) {
         $to = DPKG::Log::Entry->new($entry_ref->[-1])->timestamp;
