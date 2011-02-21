@@ -13,6 +13,10 @@ README
 t/dpkg-log-entry.t
 t/dpkg-log.t
 t/from_to.t
+t/pod.t
+t/timing.t
+t/dpkg-log-analyse-package.t
+t/dpkg-log-analyse.t
 test_data/dpkg.log
 test_data/from_to.log
 test_data/install.log
