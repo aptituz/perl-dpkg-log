@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use 5.010;
 
-our $VERSION = "1.00";
+our $VERSION = "1.10";
 
 use Carp;
 use DPKG::Log::Entry;
@@ -54,7 +54,8 @@ can use B<filter_by_time()> instead.
 
 By default the module will assume that those timestamps are in the local timezone
 as determined by DateTime::TimeZone. This can be overriden by giving the
-argument B<time_zone> which takes a timezone string (e.g. 'Europe/Berlin').
+argument B<time_zone> which takes a timezone string (e.g. 'Europe/Berlin')
+or a DateTime::TimeZone object.
 Additionally its possible to override the timestamp_pattern by specifying
 B<timestamp_format>. This has to be a valid pattern for DateTime::Format::Strptime.
 
@@ -112,12 +113,14 @@ sub filename {
 
 =item $dpkg_log->parse('time_zone' => 'Europe/Berlin')
 
+=item $dpkg_log->parse('time_zone' => $dt_tz )
+
 Call the parser.
 
 The B<time_zone> parameter is optional and specifies in which time zone
-the dpkg log timestamps are.  If its ommitted it will use the default
+the dpkg log timestamps are.  If its omitted it will use the default
 local time zone.
-
+Its possible to specify either a DateTime::TimeZone object or a string.
 =cut
 sub parse {
     my $self = shift;
@@ -134,7 +137,14 @@ sub parse {
     );
 
     # Determine system timezone
-    my $tz =  DateTime::TimeZone->new( 'name' => $params{time_zone} );
+    my $tz;
+    if (ref($params{time_zone}) and (ref($params{time_zone}) eq "DateTime::TimeZone")) {
+        $tz = $params{time_zone};
+    } elsif (ref($params{time_zone})) {
+        croak "time_zone argument has to be a string or a DateTime::TimeZone object";
+    } else {
+        $tz =  DateTime::TimeZone->new( 'name' => $params{time_zone} );
+    }
     my $ts_parser = DateTime::Format::Strptime->new( 
         pattern => $params{timestamp_pattern},
         time_zone => $params{time_zone}
@@ -232,7 +242,7 @@ sub parse {
 
 =item @entries = $dpkg_log->entries;
 
-=item @entries = $dpkg_log->entries('from' => '2010-01-01 00:00:00', to => '2010-01-02 24:00:00')
+=item @entries = $dpkg_log->entries('from' => '2010-01-01.10:00:00', to => '2010-01-02 24:00:00')
 
 Return all entries or all entries in a given timerange.
 
