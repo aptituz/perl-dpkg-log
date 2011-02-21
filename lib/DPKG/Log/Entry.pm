@@ -51,7 +51,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw( $valid_types $valid_actions );
 
-our $VERSION = '1.00';
+our $VERSION = '1.10';
 our $valid_types = {
     status => 1,
     action => 1,
