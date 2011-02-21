@@ -1,3 +1,4 @@
+[% IF NOT merge OR merge AND NOT no_data %]
 [% IF hostname %]
 dpkg - Report for [% hostname %]
 
@@ -5,6 +6,9 @@ dpkg - Report for [% hostname %]
 [% ELSE %]
 dpkg - Report for localhost
 ---------------------------
+[% END %]
+[% IF no_data %]
+No data available.
 [% END %]
 [% IF from AND to %]
 Reporting period: [% from %] - [% to %]
@@ -40,4 +44,4 @@ Packages in state "half-configured":
 
 [% END %]
 [% END %]
-
+[% END %]

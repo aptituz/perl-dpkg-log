@@ -2,6 +2,16 @@ Revision history for Perl extension DPKG::Log.
 
 1.20  Mon Feb 21 16:00:00 2011
     - Remove debugging output from DPKG::Log
+    - Various changes to examples/dpkg-report:
+        - Add merging for common hostnames (e.g. if there is
+          data for test1 and test2, show test* with all packages
+          common to BOTH systems starting with test.
+        - Add a no_data flag to the data handed to Template::Toolkit
+          in order to handle cases properly where there is no
+          data for the current period and hostname.
+        - Add a merge flag to the data handed to Template::Toolkit
+          in order to know weither merge mode is active or not
+          in the templates
 
 1.10  Fri Feb 18 14:35:00 2011
     - Bugfix in DPKG::Log::Entry: available_version did not return
