@@ -20,5 +20,8 @@ t/dpkg-log-analyse.t
 test_data/dpkg.log
 test_data/from_to.log
 test_data/install.log
-tools/dpkg-report
-tools/dpkg-report.tt2
+test_data/big.log
+test_data/multi/test1.dpkg.log
+test_data/multi/test2.dpkg.log
+examples/dpkg-report
+examples/dpkg-report.tt2
