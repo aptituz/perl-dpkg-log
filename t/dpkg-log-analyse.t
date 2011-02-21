@@ -1,5 +1,6 @@
-use Test::More tests => 18;
+use Test::More tests => 27;
 use lib 'lib';
+use DPKG::Log;
 use DPKG::Log::Analyse;
 use Data::Dumper;
 
@@ -22,3 +23,20 @@ is( scalar(keys %{$analyser->halfinstalled_packages}), 0, "halfinstalled_package
 is( scalar(keys %{$analyser->halfconfigured_packages}), 0, "halfconfigured_packages returns correct value");
 is( scalar(keys %{$analyser->installed_and_removed_packages}), 1, "installed_and_removed_packages returns correct value");
 ok($analyser = $analyser->new('filename' => 'test_data/dpkg.log'), "init DPKG::Log::Analyse from existing ref");
+
+my $dpkg_log = DPKG::Log->new('filename' => 'test_data/install.log');
+ok($analyser = $analyser->new('log_handle' => $dpkg_log), "DPKG::Log::Analyse accepts an existing DPKG::Log object");
+$analyser->analyse;
+is( scalar(keys %{$analyser->newly_installed_packages}), 1, "newly_installed_packages returns correct value");
+is( scalar(keys %{$analyser->upgraded_packages}), 0, "upgraded_packages returns correct value");
+is( scalar(keys %{$analyser->removed_packages}), 0, "removed_packages returns correct value");
+is( scalar(keys %{$analyser->unpacked_packages}), 0, "unpacked_packages returns correct value");
+is( scalar(keys %{$analyser->halfinstalled_packages}), 0, "halfinstalled_packages returns correct value");
+is( scalar(keys %{$analyser->halfconfigured_packages}), 0, "halfconfigured_packages returns correct value");
+is( scalar(keys %{$analyser->installed_and_removed_packages}), 0, "installed_and_removed_packages returns correct value");
+
+eval {
+    $analyser->new('log_handle' => 'XX' );
+};
+ok(defined($@), "DPKG::Log::Analyse with log_handle argument fails with a non DPKG::Log argument");
+

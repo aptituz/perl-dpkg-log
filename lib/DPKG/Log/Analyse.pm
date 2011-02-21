@@ -33,10 +33,15 @@ use DPKG::Log;
 use DPKG::Log::Analyse::Package;
 use Params::Validate qw(:all);
 
-=item $dpkg_log = DPKG::Log->new('filename' => 'dpkg.log')
+=item $analser = DPKG::Log::Analyse->new('filename' => 'dpkg.log')
+
+=item $analyser = DPKG::Log::Analyse->new('log_handle' => \$dpkg_log)
 
 Returns a new DPKG::Log::Analyse object.
 Filename parameter can be ommitted, it defaults to /var/log/dpkg.log.
+
+Its possible to specify an existing DPKG::Log object instead of a filename.
+This will be used and overrides any filename setting.
 
 =cut
 sub new {
@@ -46,6 +51,7 @@ sub new {
     my %params = validate(
         @_, {
                 'filename' => { 'type' => SCALAR, 'default' => '/var/log/dpkg.log' },
+                'log_handle' => { isa => 'DPKG::Log', default => undef } 
             }
     );
     
@@ -58,12 +64,17 @@ sub new {
         halfinstalled_packages => {},
         halfconfigured_packages => {},
         unpacked_packages => {},
+        installed_and_removed_packages => {},
     };
 
     if ($params{'filename'}) {
         $self->{'filename'} = $params{'filename'};
     }
-    $self->{dpkg_log} = DPKG::Log->new('filename' => $self->{'filename'});
+    if ($params{'log_handle'}) {
+        $self->{dpkg_log} = $params{'log_handle'};
+    } else {
+        $self->{dpkg_log} = DPKG::Log->new('filename' => $self->{'filename'});
+    }
     $self->{dpkg_log}->parse;
 
     bless($self, $package);

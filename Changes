@@ -10,5 +10,7 @@ Revision history for Perl extension DPKG::Log.
     - Make it possible to initialize new objects from existing
       references
     - Extend tests
+    - Add support to DPKG::Log::Analyse to specify an existing
+      DPKG::Log object as log_handle
 1.00  Fri Feb 18 10:00:00 2011
 	- Initial version
