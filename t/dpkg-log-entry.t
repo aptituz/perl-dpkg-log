@@ -1,4 +1,4 @@
-use Test::More tests => 63;
+use Test::More tests => 64;
 use lib 'lib';
 use DPKG::Log;
 
@@ -99,3 +99,4 @@ is($entry->type, "status", "entry $entry_no has correct type");
 is($entry->subject, "package", "entry $entry_no has correct subject");
 is($entry->associated_package, "libdatetime-format-strptime-perl", "entry $entry_no has correct package");
 is($entry->installed_version, "1.5000-1", "entry $entry_no has correct installed_version");
+ok($entry->new(line => "2011-02-02 11:15:33 startup archives unpack", lineno => 1), "init DPKG::Log::Entry from existing ref");

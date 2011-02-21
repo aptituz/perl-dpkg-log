@@ -7,5 +7,8 @@ Revision history for Perl extension DPKG::Log.
     - Fixed some perlcritic critics
     - Fixed various POD problems
     - Use test_data/dpkg.log in t/dpkg-log.t
+    - Make it possible to initialize new objects from existing
+      references
+    - Extend tests
 1.00  Fri Feb 18 10:00:00 2011
 	- Initial version

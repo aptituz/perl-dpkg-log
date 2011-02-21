@@ -41,6 +41,7 @@ Filename parameter can be ommitted, it defaults to /var/log/dpkg.log.
 =cut
 sub new {
     my $package = shift;
+    $package = ref($package) if ref($package);
 
     my %params = validate(
         @_, {
@@ -56,6 +57,7 @@ sub new {
         upgraded_packages => {},
         halfinstalled_packages => {},
         halfconfigured_packages => {},
+        unpacked_packages => {},
     };
 
     if ($params{'filename'}) {
@@ -82,9 +84,12 @@ sub analyse {
     $self->{from} = $dpkg_log->{from};
     $self->{to} = $dpkg_log->{to};
 
+    my $analysed_entries=0;
     foreach my $entry ($dpkg_log->entries) {
         next if not $entry->associated_package;
-        
+       
+        $analysed_entries++;
+
         # Initialize data structure if this is a package
         my $package = $entry->associated_package;
         if (not defined $self->{packages}->{$package}) {
@@ -133,7 +138,7 @@ sub analyse {
     # Forget about the log object once analysis is done
     $self->{dpkg_log} = undef;
 
-    return;
+    return 1;
 }
 
 =item $analyser->newly_installed_packages

@@ -61,6 +61,7 @@ B<timestamp_format>. This has to be a valid pattern for DateTime::Format::Strpti
 =cut
 sub new {
     my $package = shift;
+    $package = ref($package) if ref($package);
 
     my %params = validate(@_,
         {

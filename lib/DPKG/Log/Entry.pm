@@ -85,6 +85,8 @@ as 'key' => 'value' pairs.
 =cut
 sub new {
     my $package = shift;
+    $package = ref($package) if ref($package);
+
     my %params = validate( 
         @_, { 
                 'line' => { 'type' => SCALAR },

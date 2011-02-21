@@ -1,4 +1,4 @@
-use Test::More tests => 11;
+use Test::More tests => 12;
 use lib 'lib';
 use DPKG::Log;
 
@@ -17,3 +17,4 @@ ok( my ($from, $to) = $dpkg_log->get_datetime_info(), "get_datetime_info returns
 ok( $dpkg_log = DPKG::Log->new(filename => 'test_data/dpkg.log', parse => 1),
     'initialize DPKG::Log object with parse = 1');
 ok ( eval { $dpkg_log->entries >= 0 } , "object stores entries");
+ok ($dpkg_log = $dpkg_log->new(filename => 'test_data/dpkg.log'), 'initialize object from existing ref');
