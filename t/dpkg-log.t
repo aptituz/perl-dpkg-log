@@ -1,9 +1,13 @@
-use Test::More tests => 12;
+use Test::More tests => 16;
 use lib 'lib';
 use DPKG::Log;
 
 my $dpkg_log;
 my $filename;
+can_ok('DPKG::Log', 'entries');
+can_ok('DPKG::Log', 'next_entry');
+can_ok('DPKG::Log', 'filter_by_time');
+can_ok('DPKG::Log', 'get_datetime_info');
 ok($dpkg_log = DPKG::Log->new(filename => 'test_data/dpkg.log'), "initialize DPKG::Log object");
 ok($filename = $dpkg_log->filename, "filename() returns filename");
 ok($dpkg_log->filename("test.log"), "filename('test.log')");

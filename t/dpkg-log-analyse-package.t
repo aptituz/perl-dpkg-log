@@ -1,8 +1,13 @@
-use Test::More tests => 9;
+use Test::More tests => 13;
 use strict;
 use warnings;
 use lib 'lib';
 use DPKG::Log::Analyse::Package;
+
+can_ok('DPKG::Log::Analyse::Package', 'name');
+can_ok('DPKG::Log::Analyse::Package', 'version');
+can_ok('DPKG::Log::Analyse::Package', 'previous_version');
+can_ok('DPKG::Log::Analyse::Package', 'status');
 
 ok (my $package1 = DPKG::Log::Analyse::Package->new('package' => 'foobar'), 'Init DPKG::Log::Analyse::Package');
 ok (my $package2 = DPKG::Log::Analyse::Package->new('package' => 'foobaz'), 'Init second package');

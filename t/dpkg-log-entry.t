@@ -1,6 +1,20 @@
-use Test::More tests => 64;
+use Test::More tests => 76;
 use lib 'lib';
 use DPKG::Log;
+use DPKG::Log::Entry;
+
+can_ok('DPKG::Log::Entry', 'line');
+can_ok('DPKG::Log::Entry', 'lineno');
+can_ok('DPKG::Log::Entry', 'timestamp');
+can_ok('DPKG::Log::Entry', 'type');
+can_ok('DPKG::Log::Entry', 'associated_package');
+can_ok('DPKG::Log::Entry', 'action');
+can_ok('DPKG::Log::Entry', 'status');
+can_ok('DPKG::Log::Entry', 'subject');
+can_ok('DPKG::Log::Entry', 'installed_version');
+can_ok('DPKG::Log::Entry', 'available_version');
+can_ok('DPKG::Log::Entry', 'conffile');
+can_ok('DPKG::Log::Entry', 'decision');
 
 my $dpkg_log_entry;
 ok($dpkg_log_entry = DPKG::Log::Entry->new(
