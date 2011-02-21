@@ -1,6 +1,7 @@
 Changes
 lib/DPKG/Log.pm
 lib/DPKG/Log/Analyse.pm
+lib/DPKG/Log/Analyse/Package.pm
 lib/DPKG/Log/Entry.pm
 Makefile
 Makefile.PL
