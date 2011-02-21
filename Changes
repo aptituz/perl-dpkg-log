@@ -14,5 +14,6 @@ Revision history for Perl extension DPKG::Log.
       DPKG::Log object as log_handle
     - Add support to DPKG::Log to specify time_zone as
       DateTime::TimeZone objects
+    - Add missing file (DPKG/Log/Analyse/Package.pm) to tarball
 1.00  Fri Feb 18 10:00:00 2011
 	- Initial version
