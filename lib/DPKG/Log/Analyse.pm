@@ -1,7 +1,7 @@
 package DPKG::Log::Analyse;
 
 
-=head1 NMAE
+=head1 NAME
 
 DPKG::Log::Analyse - Analyse a dpkg log
 
