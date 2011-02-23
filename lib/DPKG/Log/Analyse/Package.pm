@@ -36,6 +36,7 @@ use overload (
     'cmp' => 'compare',
     '<=>' => 'compare'
 );
+
 =item $package = DPKG::Log::Analyse::Package->new('package' => 'foobar')
 
 Returns a new DPKG::Log::Analyse::Package object.
@@ -64,9 +65,10 @@ sub new {
     bless($self, $package);
     return $self;
 }
-=item $package->name
 
-Returns the name of thispackage.
+=item $package_name = $package->name;
+
+Returns the name of this package.
 
 =cut
 sub name {
@@ -120,6 +122,61 @@ sub status {
     }
     return $status;
 }
+
+=item equals($package1, $package2);
+
+=item print "equal" if $package1 eq $package2
+
+Compares two packages in their string representation.
+
+=cut
+sub equals {
+    my ($first, $second) = @_;
+    return ($first->as_string eq $second->as_string);
+}
+
+
+=item compare($package1, $package2)
+
+=item print "greater" if $package1 > $package2
+
+Compare two packages. See B<OVERLOADING> for details on how
+the comparison works.
+=cut
+sub compare {
+    my ($first, $second) = @_;
+    return -1 if ($first->name ne $second->name);
+    if ((not $first->previous_version) and (not $second->previous_version)) {
+        return ($first->version <=> $second->version);
+    } elsif ((not $first->previous_version) or (not $second->previous_version)) {
+        return -1;
+    } elsif ($first->previous_version != $second->previous_version) {
+        return -1;
+    }
+    
+    return (($first->version <=> $second->version));
+
+}
+
+=item $package_str = $package->as_string
+
+=item printf("Package name: %s", $package);
+
+Return this package as a string. This will return the package name
+and the version (if set) in the form package_name/version.
+If version is not set, it will return the package name only.
+
+=cut
+sub as_string {
+    my $self = shift;
+
+    my $string = $self->{package};
+    if ($self->version) {
+        $string = $string . "/" . $self->version;
+    }
+    return $string;
+}
+
 =back
 
 =head1 Overloading
@@ -139,37 +196,8 @@ different versions of the same package will work.
 
 This module also overloads stringification returning either the package
 name if no version is set or "package_name/version" if a version is set. 
+
 =cut
-sub equals {
-    my ($first, $second) = @_;
-    return ($first->as_string eq $second->as_string);
-}
-
-
-sub compare {
-    my ($first, $second) = @_;
-    return -1 if ($first->name ne $second->name);
-    if ((not $first->previous_version) and (not $second->previous_version)) {
-        return ($first->version <=> $second->version);
-    } elsif ((not $first->previous_version) or (not $second->previous_version)) {
-        return -1;
-    } elsif ($first->previous_version != $second->previous_version) {
-        return -1;
-    }
-    
-    return (($first->version <=> $second->version));
-
-}
-
-sub as_string {
-    my $self = shift;
-
-    my $string = $self->{package};
-    if ($self->version) {
-        $string = $string . "/" . $self->version;
-    }
-    return $string;
-}
 
 =head1 SEE ALSO
 

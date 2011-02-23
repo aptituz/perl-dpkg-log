@@ -15,6 +15,7 @@ Revision history for Perl extension DPKG::Log.
           in the templates
     - In t/timing.t use RELEASE_TESTING environment variable, because
       this is set by dzil test.
+    - Extend POD documentation for DPKG::Log::Analyse::Package
 
 1.10  Fri Feb 18 14:35:00 2011
     - Bugfix in DPKG::Log::Entry: available_version did not return
