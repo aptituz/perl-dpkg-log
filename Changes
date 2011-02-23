@@ -1,5 +1,8 @@
 Revision history for Perl extension DPKG::Log.
 
+1.20_01 Wed Feb 23 09:30:00 2011
+    - Switch to DistZilla
+
 1.20  Mon Feb 21 16:00:00 2011
     - Remove debugging output from DPKG::Log
     - Various changes to examples/dpkg-report:
