@@ -13,6 +13,8 @@ Revision history for Perl extension DPKG::Log.
         - Add a merge flag to the data handed to Template::Toolkit
           in order to know weither merge mode is active or not
           in the templates
+    - In t/timing.t use RELEASE_TESTING environment variable, because
+      this is set by dzil test.
 
 1.10  Fri Feb 18 14:35:00 2011
     - Bugfix in DPKG::Log::Entry: available_version did not return

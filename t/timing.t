@@ -8,7 +8,7 @@ use Data::Dumper;
 use Test::More;
 
 BEGIN {
-    unless ($ENV{'AUTHOR_TESTING'}) {
+    unless ($ENV{'RELEASE_TESTING'}) {
         Test::More::plan(skip_all => 'these tests are for testing by the author');
     } else {
         Test::More::plan(tests => 2);
