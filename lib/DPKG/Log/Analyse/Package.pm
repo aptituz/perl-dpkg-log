@@ -25,8 +25,6 @@ use strict;
 use warnings;
 use 5.010;
 
-our $VERSION = "1.10";
-
 use Carp;
 use DPKG::Log;
 use Dpkg::Version;
