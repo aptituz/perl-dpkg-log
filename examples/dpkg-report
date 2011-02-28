@@ -30,6 +30,8 @@ my $today = 0;
 my $last_two_days = 0;
 my $last_week = 0;
 my $last_month = 0;
+my $opt_from;
+my $opt_to;
 
 GetOptions(
     "hostname=s" => \$hostname,
@@ -37,6 +39,8 @@ GetOptions(
     "template-file=s" => \$template_file,
     "template-path=s" => \@template_dirs,
     "merge" => \$merge,
+    "from=s" => \$opt_from,
+    "to=s" => \$opt_to,
     "today" => \$today,
     "last-two-days" => \$last_two_days,
     "last-week" => \$last_week,
@@ -50,7 +54,18 @@ if (not @logfiles) {
 sub calculate_start_and_endtimes {
     my $from;
     my $to;
-    if ($today) {
+    if ($opt_from) {
+        print "Setting from from args\n";
+       my ($year, $month, $day) = split(/-/, $opt_from);
+        $from = DateTime->new(year => $year, month => $month, day => $day);
+        if ($opt_to) {
+            print "opt_to given\n";
+            ($year, $month, $day) = split(/-/, $opt_to);
+            $to = DateTime->new(year => $year, month => $month, day => $day);
+            $to = $to->add( days => 1 )->subtract(seconds => 1);
+
+        } 
+    } elsif ($today) {
         $from = DateTime->now->truncate(to => 'day');
     } elsif ($last_two_days) {
         $from = DateTime->now->truncate(to => 'day')->subtract(days => 1);
@@ -59,7 +74,9 @@ sub calculate_start_and_endtimes {
     } elsif ($last_month) {
         $from = DateTime->now->truncate(to => 'day')->subtract (months => 1);
     }
-    $to = DateTime->now->truncate(to => 'day')->add( days => 1 )->subtract(seconds => 1);
+    if (not $to) {
+        $to = DateTime->now->truncate(to => 'day')->add( days => 1 )->subtract(seconds => 1);
+    }
 
     return ($from, $to);
 }
@@ -79,9 +96,10 @@ sub gather_data {
 
     my $no_data = 0;
     my ($from, $to) = calculate_start_and_endtimes;
+    print "$to\n";
     my $dpkg_log = DPKG::Log->new(filename => $params{'logfile'},
         from => $from,
-        to => $to
+        to => $to,
     );
     my $analyser = DPKG::Log::Analyse->new(log_handle => $dpkg_log);
     eval {
